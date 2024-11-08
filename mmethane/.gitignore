@@ -1,0 +1,7 @@
+ete/
+MDSINE2/
+logs/*
+logs_semisyn/*
+logs_*
+**/__pycache__/
+FINAL_LOGS/

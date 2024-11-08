@@ -1,0 +1,33 @@
+metabs
+Hexanal
+2-Nonanone
+2-Tridecanone
+2-Undecanone
+Heptanal
+2-Pentadecanone
+2-Heptanone
+2-Octanone
+Octanal
+Hexadecanal
+Nonanal
+2-Tetradecanone
+Tetradecanal
+Methyl hexadecanoic acid
+Pentadecanal
+2-Decanone
+Methyl tetradecanoate
+
+
+
+otus
+ASV 315
+ASV 311
+ASV 305
+ASV 221
+ASV 310
+ASV 220
+ASV 303
+ASV 304
+
+
+

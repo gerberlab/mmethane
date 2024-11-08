@@ -1,0 +1,23 @@
+metabs
+3-Octanol
+Isopropyl Alcohol
+2-Nonanol
+1-Decanol
+2-Hexanol
+4-Hydroxy-3-hexanone
+1-Butanol
+1-Nonanol
+1-Tetradecanol
+1-Hexanol
+
+
+
+otus
+ASV 355
+ASV 356
+ASV 357
+ASV 353
+ASV 354
+
+
+

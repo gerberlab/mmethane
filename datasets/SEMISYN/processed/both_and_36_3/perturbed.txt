@@ -1,0 +1,26 @@
+metabs
+2-Nonanone
+2-Tridecanone
+2-Undecanone
+Heptanal
+2-Pentadecanone
+2-Octanone
+Octanal
+Hexadecanal
+Nonanal
+2-Tetradecanone
+Tetradecanal
+Pentadecanal
+2-Decanone
+
+
+
+otus
+ASV 341
+ASV 331
+ASV 329
+ASV 335
+ASV 334
+
+
+

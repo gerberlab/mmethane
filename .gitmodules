@@ -1,0 +1,3 @@
+[submodule "mditre_metabolites"]
+	path = mditre_metabolites
+	url = https://github.com/jendawkins/mditre_metabolites.git

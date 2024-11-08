@@ -1,0 +1,29 @@
+metabs
+3-Octanol
+2-Nonanol
+1-Decanol
+2-Hexanol
+n-Pentadecanol
+Octadecanol
+1-Hexadecanol
+1-Nonanol
+1-Tetradecanol
+Hexadecane
+1-Hexanol
+
+
+
+otus
+ASV 28
+ASV 20
+ASV 27
+ASV 24
+ASV 19
+ASV 26
+ASV 23
+ASV 21
+ASV 25
+ASV 22
+
+
+

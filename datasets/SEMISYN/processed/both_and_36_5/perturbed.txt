@@ -1,0 +1,42 @@
+metabs
+Hexanal
+2-Methyl-3-heptanone
+3-Pentanone, 2-methyl-
+2-Butanone
+2-Nonanone
+2-Methyl-4-heptanone
+4-Hydroxy-3-hexanone
+2-Tridecanone
+2-Undecanone
+Heptanal
+2-Oxohexane
+Acetone
+2-Pentadecanone
+2-Heptanone
+2-Octanone
+3,4-Hexanedione
+Hexanoic acid
+Octanal
+Nonanal
+Hexanoic acid, methyl ester
+2,3-Butanedione
+2,3-Pentanedione
+2-Tetradecanone
+Tetradecanal
+Pentadecanal
+2-Decanone
+Methyl valerate
+
+
+
+otus
+ASV 400
+ASV 409
+ASV 405
+ASV 402
+ASV 403
+ASV 406
+ASV 401
+
+
+

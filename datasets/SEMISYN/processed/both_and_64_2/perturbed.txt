@@ -1,0 +1,37 @@
+metabs
+2-Methyl-3-heptanone
+Cyclohexanecarboxylic acid, ethyl ester
+3-Pentanone, 2-methyl-
+2-Nonanone
+2-Methyl-4-heptanone
+Cyclohexanone, 2,2,6-trimethyl-
+2-Tridecanone
+2-Undecanone
+2-Oxohexane
+(+)-2-Bornanone
+2-Pentadecanone
+2-Heptanone
+2-Octanone
+Octanal
+Hexadecanal
+Nonanal
+Cyclohexanecarboxylic acid
+2-Tetradecanone
+Tetradecanal
+Pentadecanal
+2-Decanone
+Eucalyptol
+(-)-Menthone
+Cyclohexanecarboxylic acid, methyl ester
+
+
+
+otus
+ASV 341
+ASV 331
+ASV 329
+ASV 335
+ASV 334
+
+
+

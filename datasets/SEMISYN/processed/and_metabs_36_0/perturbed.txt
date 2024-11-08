@@ -1,0 +1,47 @@
+metabs
+1-Tetradecene
+o-Cymene
+Copaene
+Myrcene
+Mesitylene
+Cyclohexene, 3-(1,5-dimethyl-4-hexenyl)-6-methylene-, [S-(R*,S*)]-
+Terpinene
+Cyclohexene, 1-methyl-4-(1-methylethylidene)-
+Camphene
+(1R)-2,6,6-Trimethylbicyclo[3.1.1]hept-2-ene
+
+
+(-)-Menthone
+2-Methyl-4-heptanone
+2-Tetradecanone
+Heptanal
+2-Undecanone
+Methyl hexadecanoic acid
+(+)-2-Bornanone
+3-Pentanone, 2-methyl-
+2-Oxohexane
+2-Pentadecanone
+3,4-Hexanedione
+2-Nonanone
+2(3H)-Furanone, 5-heptyldihydro-
+Hexadecanal
+Cyclohexanone, 2,2,6-trimethyl-
+2-Heptanone
+2-Decanone
+2-Octanone
+2-Methyl-3-heptanone
+2-Butanone
+Nonanal
+Tetradecanal
+Heptanoic acid
+2,3-Pentanedione
+Methyl tetradecanoate
+Octanal
+Pentadecanal
+2-Tridecanone
+Hexanoic acid, butyl ester
+
+
+
+otus
+

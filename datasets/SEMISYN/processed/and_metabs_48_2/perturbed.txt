@@ -1,0 +1,51 @@
+metabs
+Hexadecane
+1-Hexanol
+n-Pentadecanol
+2-Hexanol
+1-Butanol
+1-Tetradecanol
+1-Octen-3-ol
+1-Decanol
+3-Octanol
+2-Nonanol
+1-Nonanol
+1-Hexadecanol
+Octadecanol
+
+
+(-)-Menthone
+2-Methyl-4-heptanone
+2-Tetradecanone
+Heptanal
+2-Undecanone
+Methyl hexadecanoic acid
+2,3-Butanedione
+(+)-2-Bornanone
+3-Pentanone, 2-methyl-
+2-Oxohexane
+2-Pentadecanone
+3,4-Hexanedione
+2-Nonanone
+2(3H)-Furanone, 5-heptyldihydro-
+Hexadecanal
+Cyclohexanone, 2,2,6-trimethyl-
+2-Heptanone
+2-Decanone
+2-Octanone
+2-Methyl-3-heptanone
+2-Butanone
+Nonanal
+Tetradecanal
+Heptanoic acid
+2,3-Pentanedione
+Methyl tetradecanoate
+Octanal
+Pentadecanal
+2-Tridecanone
+Hexanoic acid, butyl ester
+
+
+
+otus
+

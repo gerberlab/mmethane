@@ -1,0 +1,50 @@
+metabs
+(-)-Menthone
+2-Methyl-4-heptanone
+2-Tetradecanone
+Heptanal
+2-Undecanone
+Methyl hexadecanoic acid
+2-Oxohexane
+2-Pentadecanone
+3,4-Hexanedione
+2-Nonanone
+Hexadecanal
+Cyclohexanone, 2,2,6-trimethyl-
+2-Heptanone
+2-Decanone
+2-Octanone
+2-Methyl-3-heptanone
+Nonanal
+Tetradecanal
+2,3-Pentanedione
+Methyl tetradecanoate
+Octanal
+Pentadecanal
+2-Tridecanone
+
+
+Butanoic acid, 3-methyl-, propyl ester
+Methyl butyrate
+Butanoic acid, butyl ester
+Propanoic acid, propyl ester
+Butyl 2-methylbutanoate
+Butanoic acid, 3-methyl-, 3-methylbutyl ester
+ Propyl 2-methylpropanoate
+Ethyl propionate
+Methyl isobutyrate
+2-Methylpropyl butanoate
+Acetic acid, hexyl ester
+Isobutyl isovalerate
+Butanoic acid, 3-methylbutyl ester
+Propanoic acid, 2-methyl-, anhydride
+Methyl propionate
+Butanoic acid, propyl ester
+Methyl valerate
+Propanoic acid, butyl ester
+Ethyl Acetate
+
+
+
+otus
+

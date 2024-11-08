@@ -1,0 +1,30 @@
+metabs
+2-Nonanone
+2-Tridecanone
+2-Undecanone
+2-Oxohexane
+2-Pentadecanone
+2-Heptanone
+2-Octanone
+Octanal
+Nonanal
+2-Tetradecanone
+Tetradecanal
+Pentadecanal
+2-Decanone
+
+
+
+otus
+ASV 213
+ASV 211
+ASV 265
+ASV 263
+ASV 264
+ASV 218
+ASV 261
+ASV 262
+ASV 267
+
+
+

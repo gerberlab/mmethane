@@ -1,0 +1,7 @@
+Met Control: ([(-0.376432, 1)])
+Met Case: ([(0.483984, 1)])
+Met Control Pert: ((0.967968, 1))
+
+Taxa Control: ((-6.0, 1))
+Taxa Case: ((-2.0, 1))
+Taxa Control Pert: ((-1.0, 1))
