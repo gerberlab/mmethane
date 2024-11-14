@@ -73,11 +73,11 @@ class benchmarker():
                 x_ts.append(v['X'])
             X_ts = pd.concat(x_ts,axis=1)
 
-            if ensemble_model=='RF':
+            if ensemble_model.lower()=='rf':
                 rf = RandomForestClassifier()
-            elif ensemble_model=='AdaBoost':
+            elif ensemble_model.lower()=='adaboost':
                 rf = AdaBoostClassifier()
-            elif ensemble_model=='GradBoost':
+            elif ensemble_model.lower()=='gradboost':
                 rf = GradientBoostingClassifier()
 
             input_dict = rf._parameter_constraints
@@ -344,7 +344,7 @@ if __name__ == "__main__":
     parser.add_argument('--kfolds', type=int, default=5,
                         help='Number of folds for k-fold cross val')
     parser.add_argument('--case', type=str, default="grid")
-    parser.add_argument('--model', type=str, default='LR', choices=['RF','LR','GradBoost','AdaBoost'])
+    parser.add_argument('--model', type=str.lower, default='LR', choices=['RF','LR','GradBoost','AdaBoost'])
     parser.add_argument('--dtype', type=str, default=['metabs'], nargs='+')
     parser.add_argument('--full', type=int, default=0)
     parser.add_argument('-log','--log_transform_otus',action='store_true')
@@ -483,7 +483,7 @@ if __name__ == "__main__":
         print(args.data_name)
         model = benchmarker(dataset_dict, y, args, perturbed_mets=None, seed = seed, path=seed_path)
 
-        if args.model == 'LR':
+        if args.model.lower() == 'lr':
             model.train_l1_model()
         else:
             model.train_ensemble_models(ensemble_model=args.model)

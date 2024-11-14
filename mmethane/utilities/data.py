@@ -44,9 +44,6 @@ class ProcessData:
         self.save_path=self.config['description']['out_path'] + self.config['description']['tag']
         if not os.path.isdir(self.config['description']['out_path']):
             os.mkdir(self.config['description']['out_path'])
-        if 'metabolite_data' in self.config and 'fingerprint' in self.config['metabolite_data'] and \
-                self.config['metabolite_data']['fingerprint'] is not None:
-            self.save_path += '_' + self.config['metabolite_data']['fingerprint']
 
         if not os.path.isdir(self.save_path):
             os.mkdir(self.save_path)
@@ -650,7 +647,8 @@ class ProcessData:
                      'variable_names': self.metabolite_data.columns.values,
                      'preprocessing': self.metabolite_preprocessing,
                      'taxonomy':self.metabolite_classifications,
-                     'labels':self.class_labels}
+                     'labels':self.class_labels,
+                     'metabolite_IDs':self.metabolite_meta_df}
         if 'collapse' in self.config['metabolite_data'] and self.config['metabolite_data'][
                         'collapse'].replace(' ', '').lower() == 'true':
             if self.collapse==True:

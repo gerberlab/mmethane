@@ -206,7 +206,7 @@ def parse(parser):
                         )
     parser.add_argument('--min_epochs', default=3000, type=int, metavar='N',
                         help='number of minimum epochs to run')
-    parser.add_argument('--epochs', default=500, type=int, metavar='N',
+    parser.add_argument('--epochs', default=3000, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('--seed', type=int, default=7,
                         help='Set random seed for reproducibility')
@@ -219,7 +219,7 @@ def parse(parser):
     parser.add_argument('--validate', default=0, type=int)
     parser.add_argument('--test', default=1, type=int)
     # parser.add_argument('--emb_dim', type = float, default=20)
-    parser.add_argument('--out_path', type=str, default='/Users/jendawk/logs/mditre-logs/')
+    parser.add_argument('--out_path', type=str, default='logs/')
     parser.add_argument('--num_anneals', type=float, default=1)
     parser.add_argument('--monitor', type=str, default='train_loss')
     parser.add_argument('--train', type=int, default=1)
