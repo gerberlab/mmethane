@@ -16,7 +16,7 @@ except:
     pass
 import pickle as pkl
 
-from eval_learned_embeddings import eval_embeddings
+# from eval_learned_embeddings import eval_embeddings
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.style as mplstyle
@@ -47,12 +47,6 @@ def save_and_plot_post_training(model, train_ixs, test_ixs, log_dir, plot_traces
                          val_every_n=1, log=False)
     # plot_loss(model.running_loss_dict, log_dir, log=True)
     plot_loss(model.running_loss_dict, log_dir, log=False)
-    if hasattr(model,'class_dict'):
-        if 'metabs' in model.class_dict.keys() and hasattr(model, 'dist_emb'):
-            if model.class_dict['metabs'].emb_to_learn is not None:
-                eval_embeddings(model.class_dict['metabs'].emb_to_learn,
-                                model.class_dict['metabs'].dist_emb, path=log_dir + '/final_')
-
 
 
 def plot_heatmaps(lit_model, dataset, logdir, test_dataset_dict=None):

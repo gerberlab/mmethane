@@ -56,7 +56,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.semi_synthetic_data">
+  <component name="RunManager" selected="Python.run">
     <configuration name="benchmarker" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="microbes-metabolites" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -93,28 +93,6 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/mditre_metabolites/lightning_trainer.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="local_dispatcher" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="microbes-metabolites" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/mditre_metabolites" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/mditre_metabolites/local_dispatcher.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -167,6 +145,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="run" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="mmethane" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/mmethane" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/mmethane/run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="semi_synthetic_data" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="microbes-metabolites" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -191,19 +191,19 @@
     </configuration>
     <list>
       <item itemvalue="Python.benchmarker" />
+      <item itemvalue="Python.run" />
       <item itemvalue="Python.plot_results" />
       <item itemvalue="Python.semi_synthetic_data" />
       <item itemvalue="Python.plot_results_old" />
-      <item itemvalue="Python.local_dispatcher" />
       <item itemvalue="Python.lightning_trainer" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.run" />
         <item itemvalue="Python.semi_synthetic_data" />
         <item itemvalue="Python.plot_results" />
         <item itemvalue="Python.plot_results_old" />
         <item itemvalue="Python.lightning_trainer" />
-        <item itemvalue="Python.local_dispatcher" />
       </list>
     </recent_temporary>
   </component>
@@ -267,7 +267,7 @@
       <workItem from="1726606585518" duration="61930000" />
       <workItem from="1728880088190" duration="3537000" />
       <workItem from="1728934773715" duration="29738000" />
-      <workItem from="1731089684992" duration="6158000" />
+      <workItem from="1731089684992" duration="21123000" />
     </task>
     <servers />
   </component>
@@ -445,6 +445,11 @@
           <line>349</line>
           <option name="timeStamp" value="534" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/mmethane/utilities/data_utils.py</url>
+          <line>342</line>
+          <option name="timeStamp" value="537" />
+        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -463,6 +468,7 @@
     <SUITE FILE_PATH="coverage/microbes_metabolites$loss.coverage" NAME="loss Coverage Results" MODIFIED="1707236180361" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$get_results.coverage" NAME="get_results Coverage Results" MODIFIED="1720485869688" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$old_plot_results.coverage" NAME="plot_results Coverage Results" MODIFIED="1723335085731" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />
+    <SUITE FILE_PATH="coverage/mmethane$run.coverage" NAME="run Coverage Results" MODIFIED="1732046118159" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mmethane" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$plot_nested_cv_results.coverage" NAME="plot_nested_cv_results Coverage Results" MODIFIED="1708810884620" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$plot_results.coverage" NAME="plot_results Coverage Results" MODIFIED="1728493193495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$process_data.coverage" NAME="process_data Coverage Results" MODIFIED="1707420291905" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

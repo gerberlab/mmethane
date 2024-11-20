@@ -2,7 +2,7 @@ import pandas as pd
 import itertools
 import numpy as np
 import copy
-from data_utils import filter_by_presence_func, filter_by_cov_func, transform_func, get_epsilon
+from .data_utils import filter_by_presence_func, filter_by_cov_func, transform_func, get_epsilon
 from sklearn.model_selection import StratifiedKFold, LeaveOneOut, train_test_split
 from sklearn.cluster import KMeans
 import scipy.stats as st
@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 from scipy.spatial.distance import pdist, squareform
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
-from model_helper import TruncatedNormal
+# from .model_helper import TruncatedNormal
 import sklearn
 import os
 

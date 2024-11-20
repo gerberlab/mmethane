@@ -12,9 +12,20 @@
 - scikit-learn (v0.24.2)
 
 
-## Process data from a config file
+## Running MMETHANE
 
-Create a config file for your dataset. **config_files/config_sample.cfg** is a sample config file with all options outlined. Config file options are the following:
+To run MMETHANE with your own data, you only need to create a config file with paths to your dataset files and a few other required inputs (see below for further explanation). Then, you simply run the following command:
+
+>python3 ./run.py -c <path/to/config/file>
+
+The above command (1) processes your dataset files into the input files MMETHANE requires, (2) runs MMETHANE, and (3) outputs an .html file with a visualization of your results.
+
+## Tutorial
+After installing MMETHANE, run
+>python3 ./run.py -c ../config_files/config_sample.cfg
+
+## Creating a config file for your dataset. 
+**config_files/config_sample.cfg** is a sample config file with all options outlined. Config file options are the following:
 > **[description]** \
 > **tag**:*name of your dataset*\
 > **in_path**:*(optional) path of input data folder*\

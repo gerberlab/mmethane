@@ -2,7 +2,7 @@ import pickle, warnings, json, itertools, re, copy
 
 from scipy.spatial.distance import squareform, pdist
 
-from data_utils import *
+from .data_utils import *
 import configparser
 
 import numpy as np
@@ -24,7 +24,7 @@ import sys
 import shutil
 
 import sys, os
-sys.path.append(os.path.abspath(".."))
+# sys.path.append(os.path.abspath(".."))
 import pickle as pkl
 
 class ProcessData:
@@ -381,6 +381,8 @@ class ProcessData:
     def load_16s_data(self, sequence_file):
         print('\nLoading 16s data')
         sequence_data = read_ctsv(sequence_file)
+        if 'samples_dimension' in self.config['sequence_data'] and self.config['sequence_data']['samples_dimension']=='columns':
+            sequence_data = sequence_data.T
         sub_ids = [s for s in self.subject_IDs if s in sequence_data.index.values]
         sequence_data = sequence_data.loc[sub_ids]
         sequence_data=sequence_data[~sequence_data.index.duplicated(keep='first')]
@@ -399,6 +401,8 @@ class ProcessData:
         print('\nLoading WGS data')
         sequences=None
         sequence_data = read_ctsv(seq_data)
+        if 'samples_dimension' in self.config['sequence_data'] and self.config['sequence_data']['samples_dimension']=='columns':
+            sequence_data = sequence_data.T
         keep_ixs = [s for s in self.subject_IDs if s in sequence_data.index.values]
         sequence_data = sequence_data.loc[keep_ixs]
         print('Loaded WGS data has {0} samples and {1} genera'.format(
@@ -436,6 +440,8 @@ class ProcessData:
     def load_metabolite_data(self):
         print('\nLoading metabolite data')
         self.metabolite_data = read_ctsv(self.config['metabolite_data']['data'])
+        if 'samples_dimension' in self.config['metabolite_data'] and self.config['metabolite_data']['samples_dimension']=='columns':
+            self.metabolite_data = self.metabolite_data.T
         sub_ids = [s for s in self.subject_IDs if s in self.metabolite_data.index.values]
         self.metabolite_data = self.metabolite_data.loc[sub_ids]
         self.metabolite_data = self.metabolite_data[~self.metabolite_data.index.duplicated(keep='first')]

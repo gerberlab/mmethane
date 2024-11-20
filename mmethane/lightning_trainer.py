@@ -199,10 +199,9 @@ def parse(parser):
     parser.add_argument('--data_otu', metavar='DIR',
                         help='path to otu dataset',
                         default='../datasets/ERAWIJANTARI/processed/erawijantari_cts/seqs.pkl')
-    parser.add_argument('--data_name', type=str,
-                        help='Name of the dataset, will be used for log dirname',
-                        # default='CDI_test_ISSUEFIXED',
-                        default=datetime.datetime.now().strftime('%m-%d-%Y_%H-%M'),
+    parser.add_argument('--run_name', type=str,
+                        help='Name for log folder',
+                        default="run_1",
                         )
     parser.add_argument('--min_epochs', default=3000, type=int, metavar='N',
                         help='number of minimum epochs to run')
@@ -219,7 +218,7 @@ def parse(parser):
     parser.add_argument('--validate', default=0, type=int)
     parser.add_argument('--test', default=1, type=int)
     # parser.add_argument('--emb_dim', type = float, default=20)
-    parser.add_argument('--out_path', type=str, default='logs/')
+    parser.add_argument('--out_path', type=str, default='logs/', help = "path to logs")
     parser.add_argument('--num_anneals', type=float, default=1)
     parser.add_argument('--monitor', type=str, default='train_loss')
     parser.add_argument('--train', type=int, default=1)
@@ -1145,7 +1144,6 @@ class CVTrainer():
             self.args.metabs_p_d += 0.1
             self.args.otus_p_d += 0.1
             self.overwrite_previous = True
-            print(f"NO RULES; TRAINING AGAIN WITH metabs_p_d={self.args.metabs_p_d}, otus_p_d={self.args.otus_p_d}")
             self.train_loop(dataset_dict, train_ixs, test_ixs, fold)
         # elif [(r['type']=='otus')]
         save_input_data(self.lit_model, train_dataset_dict, test_dataset_dict, self.args,
@@ -1200,7 +1198,7 @@ def check_inputs_for_eval(OUTPUT_PATH, args_dict):
     with open(saved_args_path, 'r') as f:
         saved_args = json.load(f)
     for k, v in args_dict.items():
-        if k == 'cv_type' or k == 'parallel' or k == 'seed' or k == 'data_name' or k == 'out_path':
+        if k == 'cv_type' or k == 'parallel' or k == 'seed' or k == 'run_name' or k == 'out_path':
             continue
         if k not in saved_args:
             print(f'Warning: {k} not in saved argument')
@@ -1379,14 +1377,10 @@ if __name__ == '__main__':
     args, parser = parse(parser)
 
     if args.cv_type == 'eval':
-        check_inputs_for_eval(args.out_path + '/' + args.data_name + '/', args.__dict__)
+        check_inputs_for_eval(args.out_path + '/' + args.run_name + '/', args.__dict__)
 
     if args.method == 'fc' or args.method == 'full_fc':
         from models_fc import ComboMDITRE
-    elif args.method == 'nam' or args.method == 'no_rules':
-        from models_no_rules import ComboMDITRE
-    elif args.method == 'nam_non_agg':
-        from model_non_agg_nam import ComboMDITRE
     elif 'basic' in args.method:
         from models import ComboMDITRE
     else:
@@ -1402,7 +1396,7 @@ if __name__ == '__main__':
     #     args.data = './datasets/cdi/' + args.data
     # with open(os.path.join(args.out_path, 'total_time.txt','w'))
     st = time.time()
-    run_training_with_folds(args, OUTPUT_PATH=args.out_path + '/' + args.data_name + '/')
+    run_training_with_folds(args, OUTPUT_PATH=args.out_path + '/' + args.run_name + '/')
     et = time.time() - st
     print(f"TRAINING {args.epochs} TOOK {np.round(et / 60, 3)} MINUTES")
     # with open(os.path.join(args.out_path, 'total_time.txt'), 'w') as f:

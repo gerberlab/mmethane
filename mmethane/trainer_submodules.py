@@ -5,7 +5,6 @@ from torch.distributions.normal import Normal
 # from model_nam import featMDITRE
 from loss import *
 from viz import plot_metab_groups_in_embedding_space, plot_distribution
-from eval_learned_embeddings import eval_embeddings
 from utilities.util import *
 from utilities.model_helper import TruncatedNormal
 import scipy.special as sc

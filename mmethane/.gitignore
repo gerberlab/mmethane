@@ -5,3 +5,5 @@ logs_semisyn/*
 logs_*
 **/__pycache__/
 FINAL_LOGS/
+style.css
+test.html

@@ -10,6 +10,7 @@ import copy
 import itertools
 # from statsmodels.stats.multitest import multipletests
 import sys
+import argparse
 
 sys.path.append(os.path.abspath(".."))
 from torch import nn
@@ -34,7 +35,7 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 from plotly.tools import mpl_to_plotly
-from mditre_metabolites.plot_ete_tree import *
+from plot_ete_tree import *
 
 
 def axis_off(axes):
@@ -161,8 +162,9 @@ def plot_data_heatmap(data_0: pd.DataFrame, data_1: pd.DataFrame, threshold, cma
     return fig, ax, max_ylabels
 
 
-def plot_metabolite_structures(metabolite_names, path_to_ikeys):
-    ikeys = pd.read_csv(path_to_ikeys, index_col=0)
+def plot_metabolite_structures(metabolite_names, ikeys):
+    if isinstance(ikeys, str):
+        ikeys = pd.read_csv(ikeys, index_col=0)
     mnames = [m.split('__')[-1] for m in metabolite_names]
     m_rename = {m: m.split('__')[-1].split(': ')[-1] for m in ikeys.index.values}
     ikeys = ikeys.rename(index=m_rename)
@@ -196,7 +198,7 @@ def plot_metabolite_structures(metabolite_names, path_to_ikeys):
     return fig_ls
 
 
-def get_info_from_path(path, dataset=None, labels_map={}):
+def get_info_from_path(path, class_label=1):
     dataset_tr = pd.read_pickle(path + '/train_dataset_used.pkl')
     dataset_ts = pd.read_pickle(path + '/test_dataset_used.pkl')
     rules = pd.read_csv(path + '/EVAL/rules.csv')
@@ -207,12 +209,16 @@ def get_info_from_path(path, dataset=None, labels_map={}):
     Y = detector_activators[k0][k1]['y']
     ixs = Y.index.values
 
-    if Y.shape[0] > dataset_tr['metabs']['X'].shape[0]:
-        X_metabs = pd.concat([dataset_tr['metabs']['X'], dataset_ts['metabs']['X']]).loc[ixs]
-        X_otus = pd.concat([dataset_tr['otus']['X'], dataset_ts['otus']['X']]).loc[ixs]
-    else:
-        X_metabs = dataset_tr['metabs']['X'].loc[ixs]
-        X_otus = dataset_tr['otus']['X'].loc[ixs]
+    if 'metabs' in dataset_tr.keys():
+        if Y.shape[0] > dataset_tr['metabs']['X'].shape[0]:
+            X_metabs = pd.concat([dataset_tr['metabs']['X'], dataset_ts['metabs']['X']]).loc[ixs]
+        else:
+            X_metabs = dataset_tr['metabs']['X'].loc[ixs]
+    if 'otus' in dataset_tr.keys():
+        if Y.shape[0] > dataset_tr['otus']['X'].shape[0]:
+            X_otus = pd.concat([dataset_tr['otus']['X'], dataset_ts['otus']['X']]).loc[ixs]
+        else:
+            X_otus = dataset_tr['otus']['X'].loc[ixs]
 
     rule_locs = []
     det_params = {}
@@ -254,10 +260,6 @@ def get_info_from_path(path, dataset=None, labels_map={}):
 
         thresh = rules.loc[ix]['Detector Threshold']
         log_odds = rules.loc[ix]['Rule Log Odds']
-        if labels_map is not None and dataset is not None:
-            class_label = labels_map[dataset][1]
-        else:
-            class_label = 1
 
         ct += 1
         if rule not in rtmp:
@@ -311,17 +313,16 @@ def embed_figure(fig, ):
 
 
 if __name__ == '__main__':
-    dataset = 'ibmdb'
-    path = f'/Users/jendawk/logs/aug9-FINAL-maybe/{dataset}_cts/seqs_mets__F1=0d4168_F1_weighted=0d7206_AUC=0d6871/seed_4/'
-    labels_map = {'franzosa': {1: 'Ctrl', 0: 'IBD'}, 'ibmdb': {1: 'Ctrl', 0: 'IBD'},
-                  'erawijantari': {0: 'Ctrl', 1: 'Gastrectomy'}, 'wang': {1: 'Ctrl', 0: 'ESRD'},
-                  'he_': {1: 'Breast Fed', 0: 'Formula Fed'},
-                  'cdi_': {1: 'CDI Recurrer', 0: 'Non-recurrer'}, 'semisyn': {0: 'Ctrl', 1: 'Case'},
-                  }
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--path", type=str, default = 'logs/run_1/seed_0/')
+    parser.add_argument("--outcome_positive_value", type=str, default = "Gastrectomy")
+    parser.add_argument("--outcome_negative_value", type=str, default = "Healthy")
+    args = parser.parse_args()
+    path = args.path
+    labels_map = {1:args.outcome_positive_value,0:args.outcome_negative_value}
     dataset_tr = pd.read_pickle(path + '/train_dataset_used.pkl')
     rule_activators, det_params, num_rules, num_detectors, written_rule, Y, feats_dict = get_info_from_path(
-        path, dataset='franzosa', labels_map=labels_map)
-    path_to_ikeys = f'../datasets/{dataset.upper()}/processed/{dataset}_pubchem/metabolite_fingerprints.csv'
+        path, class_label = args.outcome_positive_value)
     figures_html = []
     cmap_taxa = sns.color_palette('YlGnBu', as_cmap=True)
     cmap_mets = sns.diverging_palette(145, 300, s=60, as_cmap=True)
@@ -340,7 +341,8 @@ if __name__ == '__main__':
             if det_params[r][d]['dtype'] == 'metabs':
                 cmap = cmap_mets
                 agg = 'average'
-                metabolite_structures = plot_metabolite_structures(metabolite_names, path_to_ikeys)
+                ikeys = dataset_tr['metabs']['metabolite_IDs']
+                metabolite_structures = plot_metabolite_structures(metabolite_names, ikeys)
                 images_left = [embed_figure(m) for m in metabolite_structures]
                 images_left = '<div class="column">' + "".join(images_left) + '</div>'
             else:
@@ -354,12 +356,12 @@ if __name__ == '__main__':
 
             dtmp = det_params[r][d]
             fig_data, _, max_labels = plot_data_heatmap(dtmp['data_0'], dtmp['data_1'], dtmp['threshold'], cmap=cmap,
-                                                        class_labels=[labels_map[dataset][0], labels_map[dataset][1]],
+                                                        class_labels=[args.outcome_negative_value, args.outcome_positive_value],
                                                         agg=agg, percent_removed=[0, 20], norm=None,
                                                         ylabel_mapper=feats_dict[(f'Rule {r}', f'Detector {d}')])
             fig_det_act, _ = plot_activation_heatmap(dtmp['activators'], Y, cmap_act,
                                                      ylabel=f'Detector {ct}\nActivation',
-                                                     class_labels=[labels_map[dataset][0], labels_map[dataset][1]])
+                                                     class_labels=[args.outcome_negative_value, args.outcome_positive_value])
             images_right = [embed_figure(fig_data), embed_figure(fig_det_act)]
             temp = f'''
             <div class="row">
@@ -371,7 +373,7 @@ if __name__ == '__main__':
             figures_html.append(temp)
             ct += 1
         fig_det_act, _ = plot_activation_heatmap(rule_activators[r], Y, cmap_act, ylabel=f"Rule {rct}\nActivation",
-                                                 class_labels=[labels_map[dataset][0], labels_map[dataset][1]])
+                                                 class_labels=[args.outcome_negative_value, args.outcome_positive_value])
         figures_html.append(embed_figure(fig_det_act))
         figures_html.append('''
                         </div>
