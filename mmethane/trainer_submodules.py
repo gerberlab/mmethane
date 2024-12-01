@@ -4,11 +4,10 @@ from torch.distributions.multivariate_normal import MultivariateNormal
 from torch.distributions.normal import Normal
 # from model_nam import featMDITRE
 from loss import *
-from viz import plot_metab_groups_in_embedding_space, plot_distribution
+from helper_plots import plot_metab_groups_in_embedding_space, plot_distribution
 from utilities.util import *
 from utilities.model_helper import TruncatedNormal
 import scipy.special as sc
-from k_means_constrained import KMeansConstrained
 from collections import Counter
 
 class ModuleArguments():
@@ -105,10 +104,6 @@ class moduleLit():
             self.dir = dir
             if self.args.method=='fc' or self.args.method=='full_fc':
                 from models_fc import featMDITRE
-            elif self.args.method=='nam_non_agg':
-                from model_non_agg_nam import featMDITRE
-            elif self.args.method=='nam' or self.args.method=='no_rules':
-                from models_no_rules import featMDITRE
             elif 'basic' in args.method:
                 from models import featMDITRE
             else:
@@ -137,209 +132,6 @@ class moduleLit():
             self.loss_func = empty_loss()
 
 
-    def init_from_options(self, dist_emb, size, dist_mat=None):
-        emb_dim = dist_emb.shape[1]
-        rng = np.random.default_rng(self.args.seed)
-        if self.dtype=='otus':
-            key='Genus'
-        else:
-            key='level 5'
-        if self.args.init_clusters=='coresets':
-            print('INITIALIZING FROM CORESETS')
-            ref = calculate_radii_prior(self.dataset, pd.DataFrame(self.dist_matrix_embed,
-                                                                                   index=self.dist_matrix.index.values,
-                                                                                   columns=self.dist_matrix.columns.values),
-                                                        self.dtype, self.args.multiplier, key=key)
-            rmax = 0.5*ref['mean']
-            c, r, pts = get_init_options_coresets(dist_emb.values, rmax)
-        else:
-            print('INITIALIZING FROM CLADES')
-            c,r,pts = get_init_options_clades(dist_emb, self.tree, self.args.seed)
-        num_cosets = len(c)
-        print(f'Num Options: {num_cosets}')
-        num_chosen = np.prod(size)
-        if num_cosets>num_chosen:
-            choose = rng.choice(range(num_cosets), num_chosen, replace=False)
-        else:
-            choose = rng.choice(range(num_cosets), num_chosen, replace=True)
-
-        eta_init = np.zeros((size[0], size[1], emb_dim), dtype=np.float32)
-        kappa_init = np.zeros((size[0], size[1]), dtype=np.float32)
-        detector_otuids = []
-        ichoose = 0
-        lines=[f'Num Rules x Num Detectors: {size}\n']
-        ntoloc = [i for i, v in enumerate(self.var_names) if v in {'ASV 66', 'ASV 77', 'ASV 69', 'ASV 53'}]
-        cluster_id_lines=[]
-        for j in range(size[0]):
-            dtmp=[]
-            lines.append(f'rule {j}')
-            for k in range(size[1]):
-                lines.append(f'detector {k}')
-                chosen_ix = choose[ichoose]
-                eta_init[j,k,:]=c[chosen_ix]
-                kappa_init[j,k]=r[chosen_ix]
-                dtmp.append(pts[chosen_ix])
-                lines.append(f'kappa: {kappa_init[j, k]}')
-                lines.append(f'# in cluster: {len(pts[chosen_ix])}')
-                lines.append('\n')
-                ichoose+=1
-                kl = len(set(ntoloc).intersection(set(pts[chosen_ix])))
-                if kl>0:
-                    cluster_id_lines.append(f'{kl} asvs in Rule {j}, Detector {k}\n')
-                    cluster_id_lines.append(f'{len(pts[chosen_ix])} other asvs in detector\n\n')
-            detector_otuids.append(dtmp)
-
-        with open(self.dir+'/init_clusters.txt','w') as f:
-            for l in lines:
-                f.write(l)
-                f.write('\n')
-
-        with open(self.dir+'/seed_7_info.txt','w') as f:
-            for l in cluster_id_lines:
-                f.write(l)
-
-        return kappa_init, eta_init, detector_otuids
-
-    def new_init(self, emb_locs, size, dist_mat=None):
-        X_in = self.X
-
-        if self.dtype!='metabs':
-            X_in = CLR(X_in)
-            X_in = transform_func(X_in,
-                                              standardize_from_training_data=False,
-                                              log_transform=False)
-        y = self.Y
-        inner_folds=5
-        scorer='f1'
-        k = self.args.seed
-        if dist_mat is None:
-            dist_mat = squareform(pdist(emb_locs.values))
-
-        lambda_min_ratio = 0.01
-        path_len = 300
-        bval = True
-        lam = 0
-        while (bval):
-            lam += 0.1
-            model2 = LogisticRegression(penalty='l1', class_weight='balanced', C=1 / lam, solver='liblinear', random_state=k)
-            model2.fit(X_in, y)
-            if np.sum(np.abs(model2.coef_)) < 1e-8:
-                l_max = lam + 1
-                bval = False
-        # l_max = 14
-        l_path = np.logspace(np.log10(l_max * lambda_min_ratio), np.log10(l_max), path_len)
-        Cs = [1 / l for l in l_path]
-        model = sklearn.linear_model.LogisticRegressionCV(cv=int(np.min([inner_folds,y.sum()])),
-                                                          penalty='l1', scoring=scorer,
-                                                          Cs=Cs, solver='liblinear', class_weight='balanced',
-                                                          random_state=k)
-        model.fit(X_in, y)
-        coefs = model.coef_.squeeze()
-        sorted_ixs = np.flipud(np.argsort(np.abs(coefs)))
-        kappa_dist = TruncatedNormal(self.kappa_prior_mean, (self.kappa_prior_mean * (1 / 12)) ** 2, 0, self.kappa_max)
-        eta_init = np.zeros((size[0], size[1], emb_locs.shape[1]), dtype=np.float32)
-        kappa_init = np.zeros((size[0], size[1]), dtype=np.float32)
-        detector_otuids = []
-        sorted_ixs_list = sorted_ixs.tolist()
-        iter=0
-        self.tree.prune(emb_locs.index.values)
-        for j in range(size[0]):
-            dtmp = []
-            for k in range(size[1]):
-                if len(sorted_ixs_list)==0:
-                    sorted_ixs_list = sorted_ixs.tolist()
-                eta_init[j,k,:] = emb_locs.values[sorted_ixs_list[iter],:]
-                sel_name = self.var_names[sorted_ixs_list[iter]]
-                sel_node = self.tree.search_nodes(name=sel_name)[0]
-                sel_parent = recurse_parents(sel_node.up)
-                if sel_parent is None:
-                    kappa_init[j,k] = kappa_dist.sample([1])*0.1
-                else:
-                    sel_clade = [n.name for n in sel_parent.get_leaves()]
-                    kappa_init[j,k] = np.max(np.linalg.norm(emb_locs.loc[sel_clade]-eta_init[j,k,:],axis=1))
-
-                sorted_ixs_list.pop(iter)
-                # kappa_init[j,k] = kappa_dist.sample([1])
-                in_ix = np.where(np.linalg.norm(emb_locs.values - eta_init[j,k,:], axis=1) <= kappa_init[j,k])[0]
-                for nix in in_ix:
-                    if nix in sorted_ixs_list:
-                        sorted_ixs_list.remove(nix)
-                dtmp.append(in_ix)
-            detector_otuids.append(dtmp)
-
-        return kappa_init, eta_init, detector_otuids
-
-    def init_w_family(self, dist_emb, size, dist_mat=None):
-        emb_dim = dist_emb.shape[1]
-        rng = np.random.default_rng(self.args.seed)
-        # all_families = self.taxonomy
-        if self.dtype=='metabs':
-            families=self.taxonomy[dist_emb.index.values].loc['subclass']
-        elif self.dtype=='otus':
-            families=self.taxonomy[dist_emb.index.values].loc[self.args.init_clusters.lower().capitalize()]
-        cats = families.unique()
-        dists = []
-
-        samp_from_dict={}
-        c_filt = []
-        for cat in cats:
-            fts_in_cat = families.index.values[families == cat]
-            if len(fts_in_cat)>0:
-                if len(fts_in_cat) == 1:
-                    centroid = dist_emb.loc[fts_in_cat[0]]
-                    tmp = np.linalg.norm(centroid-dist_emb, axis=-1)
-                    dist_from_centroid = np.min(tmp[np.nonzero(tmp)])
-                else:
-                    centroid = dist_emb.loc[fts_in_cat].mean(axis=0)
-                    dist_from_centroid = np.max(np.linalg.norm(centroid-dist_emb.loc[fts_in_cat], axis=-1))
-                samp_from_dict[cat]={'eta_init':centroid.to_numpy(),'kappa_init': dist_from_centroid,'detector_otuids':fts_in_cat}
-                c_filt.append(cat)
-
-        num_chosen = np.prod(size)
-        if num_chosen>len(c_filt):
-            choose = rng.choice(c_filt, num_chosen, replace=True)
-        else:
-            choose = rng.choice(c_filt, num_chosen, replace=False)
-
-        eta_init = np.zeros((size[0], size[1], emb_dim), dtype=np.float32)
-        kappa_init = np.zeros((size[0], size[1]), dtype=np.float32)
-        detector_otuids = []
-        ichoose=0
-        lines=[f'Num Rules x Num Detectors: {size}\n']
-        ntoloc = [i for i,v in enumerate(self.var_names) if v in {'ASV 66','ASV 77','ASV 69','ASV 53'}]
-        cluster_id_lines=[]
-        for j in range(size[0]):
-            dtmp=[]
-            lines.append(f'rule {j}')
-            for k in range(size[1]):
-                lines.append(f'detector {k}')
-                kappa_init[j,k]=samp_from_dict[choose[ichoose]]['kappa_init']
-                eta_init[j,k,:]=samp_from_dict[choose[ichoose]]['eta_init']
-                lines.append(f'kappa: {kappa_init[j,k]}')
-                asv_ids = samp_from_dict[choose[ichoose]]['detector_otuids'].tolist()
-                d_ixs = [asv_ids.index(i) for i in asv_ids]
-                dtmp.append(d_ixs)
-                lines.append(f'# in cluster: {len(d_ixs)}')
-                lines.append('\n')
-                ichoose+=1
-                kl = len(set(ntoloc).intersection(set(d_ixs)))
-                if kl>0:
-                    cluster_id_lines.append(f'{kl} asvs in Rule {j}, Detector {k}\n')
-                    cluster_id_lines.append(f'{len(d_ixs)} other asvs in detector\n\n')
-            detector_otuids.append(dtmp)
-
-
-        with open(self.dir+'/seed_7_info.txt','w') as f:
-            for l in cluster_id_lines:
-                f.write(l)
-
-        with open(self.dir+'/init_clusters.txt','w') as f:
-            for l in lines:
-                f.write(l)
-                f.write('\n')
-
-        return kappa_init, eta_init, detector_otuids
-
     def init_w_kmeans(self,emb_locs, size: list, dist_mat = None):
         """
         Inputs:
@@ -366,26 +158,10 @@ class moduleLit():
         emb_std = np.std(emb_locs)
         noise=0
         for i in range(size[0]):
-            if 'constrained' in self.args.init_clusters.lower():
-                kmeans_[i]=KMeansConstrained(n_clusters=size[1], random_state=seed + i, size_max=np.ceil(n_feats/size[1])).fit(emb_locs+noise)
-            else:
-                kmeans_[i]=KMeans(n_clusters=size[1], random_state=seed + i).fit(emb_locs+noise)
+            kmeans_[i]=KMeans(n_clusters=size[1], random_state=seed + i).fit(emb_locs+noise)
             if self.args.kmeans_noise:
                 noise = np.random.normal(0, 0.1 * emb_std, emb_locs.shape)
 
-
-        # ntoloc = {v:i for i,v in enumerate(self.var_names) if v in {'ASV 66','ASV 77','ASV 69','ASV 53'}}
-        # cluster_id = {i:kmeans_[i].labels_[list(ntoloc.values())] for i in range(size[0])}
-        # with open(self.dir+'/cluster_ids_7.txt','w') as f:
-        #     for k,v in cluster_id.items():
-        #         f.write(f'{k}: {v}')
-        #         f.write('\n')
-        #
-        # cluster_counter={i:Counter(kmeans_[i].labels_) for i in range(size[0])}
-        # with open(self.dir+'/cluster_counter.txt','w') as f:
-        #     for k,v in cluster_counter.items():
-        #         f.write(f'{k}: {v}')
-        #         f.write('\n')
         eta_init = np.zeros((size[0], size[1], emb_dim), dtype=np.float32)
         kappa_init = np.zeros((size[0], size[1]), dtype=np.float32)
         dist = np.empty((size[0], size[1], n_feats))
@@ -519,21 +295,9 @@ class moduleLit():
 
         else:
             size = [self.num_rules, self.num_detectors]
-        if 'new' in self.args.init_clusters.lower():
-            self.kappa_init, self.eta_init, self.detector_otuids = self.new_init(pd.DataFrame(self.dist_emb, index=self.var_names), size,
-                                                                             dist_mat=self.dist_matrix_embed)
-        if 'kmeans' in self.args.init_clusters.lower():
-            self.kappa_init, self.eta_init, self.detector_otuids = self.init_w_kmeans(
-                self.dist_emb, size, dist_mat=self.dist_matrix_embed)
-        elif self.args.init_clusters.lower()=='coresets' or self.args.init_clusters=='clades':
-            self.kappa_init, self.eta_init, self.detector_otuids = self.init_from_options(
-                pd.DataFrame(self.dist_emb, index=self.var_names), size, dist_mat = self.dist_matrix_embed)
-        elif self.args.init_clusters.lower()=='family' or self.args.init_clusters.lower()=='genus':
-            self.kappa_init, self.eta_init, self.detector_otuids = self.init_w_family(
-                pd.DataFrame(self.dist_emb, index=self.var_names), size, dist_mat = self.dist_matrix_embed)
-            # self.kappa_init, self.eta_init, self.detector_otuids = self.init_w_knn(
-            #     self.dist_emb, self.dist_matrix_embed, [self.num_rules, self.num_detectors], self.args.seed, self.dtype, self.kappa_prior_mean, self.kappa_max)
 
+        self.kappa_init, self.eta_init, self.detector_otuids = self.init_w_kmeans(
+            self.dist_emb, size, dist_mat=self.dist_matrix_embed)
 
         self.emb_to_learn = None
 

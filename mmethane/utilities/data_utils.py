@@ -40,29 +40,14 @@ try:
     from rdkit import Chem, DataStructs
 except:
     pass
-try:
-    from mxfp import mxfp
-except:
-    pass
-try:
-    from mhfp.encoder import MHFPEncoder
-except:
-    pass
-# from mxfp import mxfp
+
 import configparser
 import os
 try:
     import ete4
 except:
-    try:
-        import ete3 as ete4
-    except:
-        pass
+    import ete3 as ete4
 
-try:
-    import ete3
-except:
-    pass
 import shutil
 import re
 import operator as op
@@ -222,7 +207,7 @@ def make_16s_tree(seq_config, sequences, sequence_data, save_path):
     # os.chdir('..')
     print(os.getcwd())
     if 'newick_tree_query_reads.nhx' in os.listdir(save_path+ '/tmp/'):
-        sequence_tree=ete3.Tree(save_path+ '/tmp/' + 'newick_tree_query_reads.nhx')
+        sequence_tree=ete4.Tree(save_path+ '/tmp/' + 'newick_tree_query_reads.nhx')
         sequence_tree.write(features=['name'], outfile=save_path + '/sequence_tree.nhx', format=0)
     else:
         raise FileNotFoundError("No newick tree in output folder. Check to make sure phylo placement ran.")
@@ -479,14 +464,14 @@ def make_wgs_tree(taxa_strings_list, reference_tree='./utilities/mpa_vJan21.nwk.
 
         # assert(set([t.name for t in tree.traverse() if t.is_leaf()]) == set(taxa_strings_list))
         # families = np.unique([n.split(';')[-2] for n in taxa_strings_list])
-        # colors = ete3.random_color(num=len(families))
+        # colors = ete4.random_color(num=len(families))
         # cdict = {f:c for f,c in zip(families,colors)}
         # for n in tree.traverse():
         #     if n.is_leaf():
-        #         n.add_face(ete3.TextFace(n.name.split(';')[-1], fgcolor=cdict[n.name.split(';')[-2]]), column=0, position='branch-top')
+        #         n.add_face(ete4.TextFace(n.name.split(';')[-1], fgcolor=cdict[n.name.split(';')[-2]]), column=0, position='branch-top')
         #     else:
         #         n.name = n.name.split(';')[-1]
-        # ts = ete3.TreeStyle()
+        # ts = ete4.TreeStyle()
         # ts.show_leaf_name = True
         # disp_tree.render(save_path+'/tree_for_WGS.pdf', tree_style=ts)
         # plt.close()
@@ -530,7 +515,7 @@ def relabel_tree(tree, label_to_clean_label):
 #     print('\nMaking WGS tree')
 #     names_to_nodes = {}
 #     for name in sequence_data.columns:
-#         names_to_nodes[name] = ete3.TreeNode(name=name, dist=1.0)
+#         names_to_nodes[name] = ete4.TreeNode(name=name, dist=1.0)
 #     nodes = copy.copy(np.unique(sequence_data.columns.values)).tolist()
 #     i=0
 #     while (len(nodes))>0:
@@ -544,7 +529,7 @@ def relabel_tree(tree, label_to_clean_label):
 #         if parent in names_to_nodes.keys():
 #             parent_node=names_to_nodes[parent]
 #         else:
-#             parent_node = ete3.Tree(name=parent, dist=1.0)
+#             parent_node = ete4.Tree(name=parent, dist=1.0)
 #             names_to_nodes[parent] = parent_node
 #         if k not in [n.name for n in parent_node.children]:
 #             parent_node.add_child(v)
@@ -555,14 +540,14 @@ def relabel_tree(tree, label_to_clean_label):
 #     disp_tree = sequence_tree.copy()
 #
 #     families = np.unique([n.split(';')[-2] for n in sequence_data.columns.values])
-#     colors = ete3.random_color(num=len(families))
+#     colors = ete4.random_color(num=len(families))
 #     cdict = {f:c for f,c in zip(families,colors)}
 #     for n in disp_tree.traverse():
 #         if n.is_leaf():
-#             n.add_face(ete3.TextFace(n.name.split(';')[-1], fgcolor=cdict[n.name.split(';')[-2]]), column=0, position='branch-top')
+#             n.add_face(ete4.TextFace(n.name.split(';')[-1], fgcolor=cdict[n.name.split(';')[-2]]), column=0, position='branch-top')
 #         else:
 #             n.name = n.name.split(';')[-1]
-#     ts = ete3.TreeStyle()
+#     ts = ete4.TreeStyle()
 #     ts.show_leaf_name = True
 #     disp_tree.render(save_path+'/tree_for_WGS.pdf', tree_style=ts)
 #     plt.close()
@@ -806,11 +791,11 @@ def add_family_names_to_tree(dataset, features):
 
     # root = query_parent_dict[None][0]
     root = 'COMPOUNDS'
-    query_root = ete3.TreeNode(name=root)
+    query_root = ete4.TreeNode(name=root)
     parents, added = [query_root], set([root])
     while parents:
         nxt = parents.pop()
-        child_nodes = {child: ete3.TreeNode(name=child) for child in query_parent_dict[nxt.name]}
+        child_nodes = {child: ete4.TreeNode(name=child) for child in query_parent_dict[nxt.name]}
         for child in query_parent_dict[nxt.name]:
             nxt.add_child(child_nodes[child], name=child, dist=1)
             if child not in added:
@@ -841,43 +826,6 @@ def get_map4_fingerprint(df):
             # import pdb; pdb.set_trace()
     return pd.Series(fv, index=indices, name='fingerprints')
 
-def get_mhfp_fingerprint(df):
-    mhfp_encoder = MHFPEncoder()
-    fv=[]
-    indices=[]
-    dfn=df.fillna(np.nan)
-    df=dfn.fillna('')
-    for k in df.index.values:
-        ii=df[k]
-        if ii is None or len(ii)==0:
-            fv.append(None)
-            indices.append(None)
-        else:
-            try:
-                fa=mhfp_encoder.encode(ii)
-            except:
-                continue
-            fv.append(fa)
-            indices.append(k)
-    return pd.Series(fv, index=indices, name='fingerprints')
-
-def get_mxfp_fingerprint(df):
-    MXFP = mxfp.MXFPCalculator()
-    fv=[]
-    indices=[]
-    for k in df.index.values:
-        ii=df[k]
-        if ii is None or len(ii)==0:
-            fv.append(None)
-            indices.append(None)
-        else:
-            try:
-                fa=MXFP.mxfp_from_smiles(ii)
-            except:
-                continue
-            fv.append(fa)
-            indices.append(k)
-    return pd.Series(fv, index=indices, name='fingerprints')
 
 def get_infomax_fingerprint(inchi_df):
     graphs = []
@@ -1072,8 +1020,6 @@ def get_dist_mat(fingerprint_dict, ftype='rdkit'):
                 dist=1-sim
             elif ftype=='mqn':
                 dist=cityblock(fingerprint_dict[m1],fingerprint_dict[m2])
-            elif ftype=='mhfp':
-                dist = MHFPEncoder.distance(m1,m2)
             elif ftype=='map4':
                 dist = ENC.get_distance(fingerprint_dict[m1], fingerprint_dict[m2])
             else:
@@ -1114,11 +1060,11 @@ def get_metabolite_tree_from_classifications(metabolite_classifications):
             query_parent_dict[classification.iloc[-1].upper()].append(met)
 
     root = 'COMPOUNDS'
-    metabolite_tree = ete3.TreeNode(name=root)
+    metabolite_tree = ete4.TreeNode(name=root)
     parents, added = [metabolite_tree], set([root])
     while parents:
         nxt = parents.pop()
-        child_nodes = {child: ete3.TreeNode(name=child) for child in query_parent_dict[nxt.name]}
+        child_nodes = {child: ete4.TreeNode(name=child) for child in query_parent_dict[nxt.name]}
         for child in query_parent_dict[nxt.name]:
             nxt.add_child(child_nodes[child], name=child, dist=1)
             if child not in added:
@@ -1128,7 +1074,7 @@ def get_metabolite_tree_from_classifications(metabolite_classifications):
 
     for n in metabolite_tree.traverse():
         if not n.is_leaf():
-            n.add_face(ete3.TextFace(n.name + '   '), column=0, position='branch-top')
+            n.add_face(ete4.TextFace(n.name + '   '), column=0, position='branch-top')
 
     return metabolite_tree
 

@@ -318,7 +318,7 @@ def process_benchmark_results(path, syn_data_seed = None):
                        'F1_weighted': np.round(np.percentile([seed_res[s]['F1_weighted'] for s in seed_res.keys()], 75), 3),
                         'AUC': np.round(np.percentile([seed_res[s]['AUC'] for s in seed_res.keys()], 75), 3),
                           }
-    pd.DataFrame(seed_res).T.to_csv(path + '/' + f'res.csv')
+    pd.DataFrame(seed_res).T.to_csv(path + '/' + f'multiseed_results.csv')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Differentiable rule learning for microbiome')

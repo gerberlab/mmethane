@@ -11,6 +11,7 @@ from matplotlib.collections import LineCollection
 import numpy as np
 import pandas as pd
 import ete3
+import re
 
 
 def round_sig(x, sig=2):
@@ -49,7 +50,7 @@ def plot_tree(tree, align_names=False, name_offset=None, max_dist=None, font_siz
         axe = plt.subplot(111)
 
     def __draw_edge_nm(c, x):
-        h = node_pos[c]
+        h = node_pos[c] # node position of child
         hlinec.append(((x, h), (x + c.dist, h)))
         hlines.append(cstyle)
         return (x + c.dist, h)
@@ -107,6 +108,8 @@ def plot_tree(tree, align_names=False, name_offset=None, max_dist=None, font_siz
     # draw tree
     for n in node_list:
         style = n._get_style()
+        if len([i for i in n.iter_descendants()]) == len([i for i in tree.iter_descendants()]):
+            ldist = n.dist
         x = sum(n2.dist for n2 in n.iter_ancestors()) + n.dist
         if n.is_leaf():
             name = n.name if label_func is None else label_func(n.name, **kwargs)
@@ -135,7 +138,7 @@ def plot_tree(tree, align_names=False, name_offset=None, max_dist=None, font_siz
         nodey.append(y)
 
     # draw root
-    __draw_edge(tree, 0)
+    # __draw_edge(tree, ldist)
 
     lstyles = ['-', '--', ':']
     hline_col = LineCollection(hlinec, colors=[l['hz_line_color'] for l in hlines],
@@ -210,12 +213,12 @@ def plot_phylo_tree(dataset, features, out_path=None, ax=None):
 
     def color_func(x, **kwargs):
         if x in features:
-            return 'r'
-        else:
             return 'k'
+        else:
+            return '0.5'
 
     def label_func(x, **kwargs):
-        return x.replace('ASV','Taxa') + ', ' + str(dataset['taxonomy'][x].loc['Species']).replace('_',' ')
+        return str(dataset['taxonomy'][x].loc['Species']).replace('_',' ')
 
     if features is not None and len(all_feats) > 0:
 
@@ -231,12 +234,11 @@ def plot_phylo_tree(dataset, features, out_path=None, ax=None):
     # out_path = 'tree.nw'
     t.write(out_path)
 
-    print('wrote tree to ' + out_path)
     ts = ete3.TreeStyle()
     ts.show_leaf_name = True
     if ax is not None:
         coords, ax = plot_tree(t, axe=ax, color_func=color_func, label_func=label_func, dataset=dataset, features=features, font_size=6)
-        return ax
+        return ax, [n.name for n in t.get_leaves() if n.name in features]
     else:
         for n in t.traverse():
             if n.is_leaf():

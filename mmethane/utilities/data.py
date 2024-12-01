@@ -7,7 +7,6 @@ import configparser
 
 import numpy as np
 import pandas as pd
-import os
 try:
     import ete4
 except:
@@ -16,15 +15,8 @@ except:
     except:
         pass
 
-import pickle as pklF
-import time
-import argparse
-# from helper import *
-import sys
-import shutil
 
-import sys, os
-# sys.path.append(os.path.abspath(".."))
+import os
 import pickle as pkl
 
 class ProcessData:
@@ -522,12 +514,6 @@ class ProcessData:
                 if self.fingerprint.lower()=='rdkit' or self.fingerprint.lower()=='morgan' or self.fingerprint.lower()=='mqn':
                     fingerprint_series = get_rdkit_fingerprint(self.metabolite_meta_df[self.key_type.lower()],
                                                                self.fingerprint)
-                elif self.fingerprint.lower()=='mhfp':
-                    fingerprint_series = get_mhfp_fingerprint(self.metabolite_meta_df[self.key_type.lower()])
-                    fingerprint_series.name = 'fingerprints'
-                elif self.fingerprint.lower()=='mxfp':
-                    fingerprint_series = get_mxfp_fingerprint(self.metabolite_meta_df[self.key_type.lower()])
-                    fingerprint_series.name = 'fingerprints'
                 elif self.fingerprint.lower()=='pubchem':
                     assert('fingerprints' in self.metabolite_meta_df.columns.values)
                     fingerprint_series = self.metabolite_meta_df['fingerprints'].squeeze()
@@ -646,7 +632,8 @@ class ProcessData:
     def save_metabolite_data_to_pickle(self):
         # print(f'\nSaving metabolite data to {self.save_path + "/mets.pkl"}')
                      # 'preprocessing': compose(self.metabolite_processing_funcs)}
-        self.Y = self.Y.loc[self.metabolite_data.index.values]
+        ixs = [ix for ix in self.metabolite_data.index.values if ix in self.Y.index.values]
+        self.Y = self.Y.loc[ixs]
         data_dict = {'X': self.metabolite_data, 'y': self.Y,
                      'distances': self.metabolite_dist_df,
                      'variable_tree': self.metabolite_tree,

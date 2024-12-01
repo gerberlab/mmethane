@@ -91,13 +91,7 @@ class moduleLoss():
         detectors = self.model.z_d
         if self.args.neg_bin_prior:
             loc_param = 1
-            if self.args.bc_loss_type == 'none':
-                det_abun_bc_loss = torch.tensor(0.0)
-            elif self.args.bc_loss_type=='mean':
-                det_abun_bc_loss = binary_concrete_loss(1 / k_alpha, loc_param,
-                                                        (1 - 2 * det_eps) * detectors + det_eps).mean()
-            else:
-                det_abun_bc_loss = binary_concrete_loss(1 / k_alpha, loc_param, (1 - 2 * det_eps) * detectors + det_eps).sum()
+            det_abun_bc_loss = binary_concrete_loss(1 / k_alpha, loc_param, (1 - 2 * det_eps) * detectors + det_eps).sum()
             z_loss = negbin_loss(detectors.sum(dim=-1),
                                  self.args.z_mean, self.args.z_var).sum()
             num_det_loss = z_loss

@@ -11,7 +11,7 @@ from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
 # from lightning.pytorch.loggers import CSVLogger
 import argparse
 
-from viz import *
+from helper_plots import *
 import json
 from loss import mapLoss
 
@@ -54,17 +54,13 @@ global_args, _ = global_parser.parse_known_args()
 
 if global_args.use_ray:
     ray.init(ignore_reinit_error=True, runtime_env={"working_dir": os.getcwd(),
-                                                    "py_modules": ["../utilities/"],
-                                                    "excludes":['../utilities/phylo_placement/refpkg/RDP-11-5_TS_Processed.refpkg/RDP-11-5_TS_Processed_Aln.fa',
-                                                                '/Users/jendawk/Dropbox (MIT)/microbes-metabolites/mditre_metabolites/.git/objects/pack/pack-4e454680d6ad3af8da44da0a5a44658070856ad5.pack',
+                                                    "py_modules": ["./utilities/"],
+                                                    "excludes":['./utilities/phylo_placement/refpkg/RDP-11-5_TS_Processed.refpkg/RDP-11-5_TS_Processed_Aln.fa',
+                                                                '.git/objects/pack/pack-4e454680d6ad3af8da44da0a5a44658070856ad5.pack',
                                                                  '.git/objects/pack/pack-4e454680d6ad3af8da44da0a5a44658070856ad5.pack',
                                                                 '.git/objects/pack/',
-                                                                '*.log','*.job',
-                                                                'core.*',
-
-                                                                'logs_semisyn_preThesis/',
-                                                                'logs_semiysn/',
-                                                                'logs/']})
+                                                               '*.job',
+                                                                'core.*']})
 
 # ray.init()
 # sys.setrecursionlimit(2097152)
@@ -91,7 +87,6 @@ def parse(parser):
     parser.add_argument('--method', type=str, default='basic', choices=['basic', 'fc', 'nam_non_agg',
                                                                         'full_fc', 'nam', 'no_rules',
                                                                         'nam_with_interactions'])
-    parser.add_argument('--bc_loss_type', type=str, default='sum',choices=['mean','sum','none'])
     parser.add_argument('--init_multiplier', type=float, default=0.1)
     parser.add_argument('--plot_all_seeds', type=int, default=1)
     parser.add_argument('--batch_norm', type=int, default=1)
@@ -124,7 +119,7 @@ def parse(parser):
     parser.add_argument('--z_r_var', type=float, default=5, help='NBD variance of active rules')
     parser.add_argument('--z_mean', type=float, default=1, help='NBD Mean active detectors per rule')
     parser.add_argument('--z_var', type=float, default=5, help='NBD variance of active detectors per rule')
-    parser.add_argument('--adj_rule_loss', type=int, default=1)
+    parser.add_argument('--adj_rule_loss', type=int, default=0)
 
     # Metabolite model specific parameters
     parser.add_argument('--metabs_lr_kappa', default=0.001, type=float, help='Initial learning rate for kappa.',
@@ -141,7 +136,7 @@ def parse(parser):
                         help='Max Temperature on heavyside logistic for threshold')
     parser.add_argument('--metabs_max_k_thresh', default=10, type=float,
                         help='Min Temperature on heavyside logistic for threshold')
-    parser.add_argument('--metabs_min_k_bc', default=1, type=float, help='Min Temperature for binary concretes')
+    parser.add_argument('--metabs_min_k_bc', default=0.5, type=float, help='Min Temperature for binary concretes')
     parser.add_argument('--metabs_max_k_bc', default=10, type=float, help='Max Temperature for binary concretes')
     parser.add_argument('--metabs_n_d', type=int, default=10, help='Number of detectors')
     parser.add_argument('--metabs_emb_dim', type=float)
@@ -151,19 +146,18 @@ def parse(parser):
     parser.add_argument('--metabs_lr_nam', type=float, default=0.0001)
     parser.add_argument('--metabs_neg_bin_prior', type=int, default=0)
     parser.add_argument('--metabs_bernoulli_prior', type=int, default=1)
-    parser.add_argument('--metabs_bc_loss_type', type=str, default="sum")
     parser.add_argument('--metabs_init_clusters', type=str.lower,default='kmeans',
                         choices=['kmeans','kmeansconstrained','family','genus','coresets','clades', 'new'])
     parser.add_argument('--metabs_adj_n_d', type=int, default=0)
     parser.add_argument('--metabs_kappa_mult', type=float, default=1e3)
-    parser.add_argument('--metabs_adj_kappa_loss', type=int, default=1)
-    parser.add_argument('--metabs_adj_detector_loss', type=int, default=1)
+    parser.add_argument('--metabs_adj_kappa_loss', type=int, default=0)
+    parser.add_argument('--metabs_adj_detector_loss', type=int, default=0)
 
     # Microbe model specific parameters
     parser.add_argument('--otus_lr_kappa', default=0.001, type=float, help='Initial learning rate for kappa.')
     parser.add_argument('--otus_lr_eta', default=0.001, type=float, help='Initial learning rate for eta.')
     parser.add_argument('--otus_lr_emb', default=0.001, type=float, help='Initial learning rate for emb.')
-    parser.add_argument('--otus_lr_thresh', default=0.001, type=float, help='Initial learning rate for threshold.')
+    parser.add_argument('--otus_lr_thresh', default=0.0001, type=float, help='Initial learning rate for threshold.')
     parser.add_argument('--otus_min_k_otu', default=100, type=float,
                         help='Max Temperature on heavyside logistic for otu selection')
     parser.add_argument('--otus_max_k_otu', default=1000, type=float,
@@ -182,13 +176,12 @@ def parse(parser):
     parser.add_argument('--otus_lr_nam', type=float, default=0.0001)
     parser.add_argument('--otus_neg_bin_prior', type=int, default=0)
     parser.add_argument('--otus_bernoulli_prior', type=int, default=1)
-    parser.add_argument('--otus_bc_loss_type', type=str, default="sum")
     parser.add_argument('--otus_init_clusters', type=str.lower,default='kmeans',
                         choices=['kmeans', 'kmeansconstrained', 'family', 'genus', 'coresets','clades','new'])
-    parser.add_argument('--otus_adj_n_d', type=int, default=1)
+    parser.add_argument('--otus_adj_n_d', type=int, default=0)
     parser.add_argument('--otus_kappa_mult', type=float, default=1e3)
-    parser.add_argument('--otus_adj_kappa_loss', type=int, default=1)
-    parser.add_argument('--otus_adj_detector_loss', type=int, default=1)
+    parser.add_argument('--otus_adj_kappa_loss', type=int, default=0)
+    parser.add_argument('--otus_adj_detector_loss', type=int, default=0)
 
     # Training Parameters
     # ('../datasets/HE/processed/he_pubchem/2_mets.pkl',
@@ -203,7 +196,7 @@ def parse(parser):
                         help='Name for log folder',
                         default="run_1",
                         )
-    parser.add_argument('--min_epochs', default=3000, type=int, metavar='N',
+    parser.add_argument('--min_epochs', default=100, type=int, metavar='N',
                         help='number of minimum epochs to run')
     parser.add_argument('--epochs', default=3000, type=int, metavar='N',
                         help='number of total epochs to run')
@@ -226,9 +219,9 @@ def parse(parser):
                         default=['metabs','otus'],
                         choices=['metabs', 'otus'],
                         help='Choose type of data', nargs='+')
-    parser.add_argument('--schedule_lr', type=int, default=1,
+    parser.add_argument('--schedule_lr', type=int, default=0,
                         help='Schedule learning rate')
-    parser.add_argument('--parallel', type=int, default=0,
+    parser.add_argument('--parallel', type=int, default=6,
                         help='run in parallel')
     parser.add_argument('--only_mets_w_emb', type=int, default=1, help='whether or not keep only mets with embeddings')
     parser.add_argument('--only_otus_w_emb', type=int, default=1, help='whether or not keep only otus with embeddings')
@@ -274,7 +267,7 @@ def parse(parser):
     parser.add_argument('--dropout', type=float, default=0)
     parser.add_argument('--plot_traces', type=int, default=1)
     parser.add_argument('--optimizer', type=str, default='NAdam', choices=['Adam','RMSprop','NAdam','RAdam','AdamW'])
-    parser.add_argument('--eta_min', type=float, default=1e-6)
+    parser.add_argument('--eta_min', type=float, default=0.00001)
     parser.add_argument('--eta_min_frac', type=float, default=1e-2)
     parser.add_argument('--patience', type=float, default=100)
     parser.add_argument('--kmeans_noise', type=int, default=1)
@@ -319,11 +312,7 @@ class LitMDITRE(pl.LightningModule):
         self.num_detectors = 0
         self.n_d_per_class = {}
 
-        ### START HERE!!
-        # if self.args.method=='basic':
-        #     self.detector_ids = [[]*self.args.n_r]
-        # else:
-        #     self.detector_ids = [[]]
+
         for type in self.args.dtype:
             if type != 'metabs':
                 self.learn_embeddings = False
@@ -356,10 +345,6 @@ class LitMDITRE(pl.LightningModule):
         self.model = ComboMDITRE(self.args, self.model_dict)
         self.model.init_params(self.init_args, device=device)
 
-        if self.args.method=='full_fc':
-            with open(self.dir + '/model_structure.txt','w') as f:
-                for name, parameter in self.model.fc.named_parameters():
-                    f.write(f'{name}, {parameter.shape}\n')
         self.logging_dict = {b: [] for b, a in self.model.named_parameters()}
         for type in self.args.dtype:
             log_dict = {type + '_' + key: value for key, value in self.class_dict[type].logging_dict.items()}
@@ -431,10 +416,7 @@ class LitMDITRE(pl.LightningModule):
 
     def set_init_params(self):
         beta_init = np.random.normal(0, 1, (self.num_rules)) * self.args.init_multiplier
-        if 'no_rules' in self.args.method:
-            w_init = np.random.normal(0, 1, (1, self.num_detectors))
-        else:
-            w_init = np.random.normal(0, 1, (1, self.num_rules))
+        w_init = np.random.normal(0, 1, (1, self.num_rules))
         bias_init = np.zeros((1))
 
         self.init_args = {
@@ -442,14 +424,6 @@ class LitMDITRE(pl.LightningModule):
             'bias_init': bias_init,
             'beta_init': beta_init,
         }
-        # if self.args.init_with_LR and self.args.method!='full_fc':
-        #     z_tmp = np.hstack([v.z_out for k, v in self.class_dict.items()])
-        #     self.init_args['alpha_init'] = sc.logit(z_tmp) * self.args.init_multiplier
-        # else:
-        #     if 'basic' not in args.method:
-        #         self.init_args['alpha_init'] = np.random.normal(0, 1, (self.num_detectors)) * self.args.init_multiplier
-        #     else:
-        #         self.init_args['alpha_init'] = np.random.normal(0, 1, (self.num_rules, self.num_detectors)) * self.args.init_multiplier
 
     def forward(self, x_dict, hard_otu, hard_bc, noise_factor):
         return self.model(x_dict, self.k_step, hard_otu=hard_otu, hard_bc=hard_bc, noise_factor=noise_factor)
@@ -901,9 +875,6 @@ class CVTrainer():
     # @ray.remote
     def train_loop(self, dataset_dict, train_ixs, test_ixs, fold):
 
-        with open(self.outpath + f"seed_{self.args.seed}/time.txt", "w") as f:
-            f.write(f"OUTER TIME LOG\n")
-
         outer_start = time.time()
         self.train_ixs = train_ixs
         self.test_ixs = test_ixs
@@ -1131,20 +1102,45 @@ class CVTrainer():
             if 'basic' in self.args.method:
                 rules_dict = plot_joint_results(self.train_dataset_dict, self.y, train_ixs, self.lit_model.logging_dict,
                                    self.output_path, self.args,
-                                   self.lit_model, w_maybe_rules=False)
+                                   self.lit_model, w_maybe_rules=True)
                 rules_dict = plot_joint_results(self.train_dataset_dict, self.y, train_ixs, self.lit_model.logging_dict,
                                    self.output_path, self.args,
-                                   self.lit_model, w_maybe_rules=True)
+                                   self.lit_model, w_maybe_rules=False)
             else:
                 rules_dict = plot_joint_results_nn(self.train_dataset_dict, self.y, train_ixs, self.lit_model.logging_dict,
                                       self.output_path, self.args,
                                       self.lit_model)
 
+
         if len(rules_dict)==0:
-            self.args.metabs_p_d += 0.1
-            self.args.otus_p_d += 0.1
+            self.args.metabs_p_d += 0.05
+            self.args.otus_p_d += 0.05
             self.overwrite_previous = True
             self.train_loop(dataset_dict, train_ixs, test_ixs, fold)
+            if os.path.isfile(self.outpath +'/'+ sts + '/logfile.txt'):
+                with open(self.outpath +'/'+ sts + '/logfile.txt','a') as f:
+                    f.write(f"RETRAINING WITH {self.args.metabs_p_d}\n")
+            else:
+                with open(self.outpath +'/'+ sts + '/logfile.txt','w') as f:
+                    f.write(f"RETRAINING WITH {self.args.metabs_p_d}\n")
+
+        elif len(rules_dict)>20:
+            if self.args.metabs_p_d>0.01:
+                self.args.metabs_p_d -= 0.01
+                self.args.otus_p_d -= 0.01
+            else:
+                self.args.metabs_p_d = self.args.metabs_p_d/2
+                self.args.otus_p_d = self.args.otus_p_d / 2
+            self.overwrite_previous = True
+            self.train_loop(dataset_dict, train_ixs, test_ixs, fold)
+            if os.path.isfile(self.outpath +'/'+ sts + '/logfile.txt'):
+                with open(self.outpath +'/'+ sts + '/logfile.txt','a') as f:
+                    f.write(f"len(rules_dict) {len(rules_dict)}\n")
+                    f.write(f"RETRAINING WITH {self.args.metabs_p_d}\n")
+            else:
+                with open(self.outpath +'/'+ sts + '/logfile.txt', 'w') as f:
+                    f.write(f"len(rules_dict) {len(rules_dict)}\n")
+                    f.write(f"RETRAINING WITH {self.args.metabs_p_d}\n")
         # elif [(r['type']=='otus')]
         save_input_data(self.lit_model, train_dataset_dict, test_dataset_dict, self.args,
                         self.outpath + f'seed_{self.args.seed}/')
@@ -1376,6 +1372,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Differentiable rule learning for microbiome')
     args, parser = parse(parser)
 
+    if not os.path.isabs(args.out_path):
+        args.out_path = os.getcwd() + '/' + args.out_path
+
+    print("OUT PATH:", args.out_path)
     if args.cv_type == 'eval':
         check_inputs_for_eval(args.out_path + '/' + args.run_name + '/', args.__dict__)
 

@@ -11,7 +11,7 @@ from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
 # from lightning.pytorch.loggers import CSVLogger
 import argparse
 
-from viz import *
+from helper_plots import *
 import json
 
 import warnings
@@ -51,11 +51,13 @@ global_args, _ = global_parser.parse_known_args()
 
 if global_args.use_ray:
     ray.init(ignore_reinit_error=True, runtime_env={"working_dir": os.getcwd(),
-                                                    "py_modules": ["../utilities/"],
-                                                    "excludes":['../utilities/phylo_placement/refpkg/RDP-11-5_TS_Processed.refpkg/RDP-11-5_TS_Processed_Aln.fa',
-                                                                '/Users/jendawk/Dropbox (MIT)/microbes-metabolites/mditre_metabolites/.git/objects/pack/pack-4e454680d6ad3af8da44da0a5a44658070856ad5.pack',
+                                                    "py_modules": ["./utilities/"],
+                                                    "excludes":['./utilities/phylo_placement/refpkg/RDP-11-5_TS_Processed.refpkg/RDP-11-5_TS_Processed_Aln.fa',
+                                                                '.git/objects/pack/pack-4e454680d6ad3af8da44da0a5a44658070856ad5.pack',
                                                                  '.git/objects/pack/pack-4e454680d6ad3af8da44da0a5a44658070856ad5.pack',
-                                                                '.git/objects/pack/']})
+                                                                '.git/objects/pack/',
+                                                               '*.job',
+                                                                'core.*']})
 
 # ray.init()
 # sys.setrecursionlimit(2097152)
