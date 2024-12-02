@@ -91,45 +91,26 @@ class moduleLit():
 
         self.num_rules = self.args.n_r
         self.num_detectors = self.args.n_d
-        if self.args.add_interactions:
-            self.num_detectors += self.args.n_d*2
-            # self.interaction_detector_ids = np.random.choice(list(itertools.combinations(np.arange(self.args.n_d*2), 2)),
-            #                                                  self.args.n_d*2)
-
 
         # build and initialize the model
-        if self.args.method!='full_fc':
-            self.set_model_hparams()
-            self.set_init_params()
-            self.dir = dir
-            if self.args.method=='fc' or self.args.method=='full_fc':
-                from models_fc import featMDITRE
-            elif 'basic' in args.method:
-                from models import featMDITRE
-            else:
-                ValueError(
-                    'Warning: accepted method not provided. Choices are: "basic", "fc", "nam", or "full_fc". Default "basic" will be used.')
+        self.set_model_hparams()
+        self.set_init_params()
+        self.dir = dir
+        from models import featMDITRE
 
-            self.model = featMDITRE(self.args.n_d, self.dist_emb, self.emb_dim, self.dtype, self.num_emb_to_learn,
-                                    args = self.args, num_rules = self.args.n_r, num_feats = self.num_otus)
-            plot_distribution(self, {f'kappa': self.kappa_prior}, self.dir)
-            if device is not None:
-                self.model = self.model.to(device)
+        self.model = featMDITRE(self.args.n_d, self.dist_emb, self.emb_dim, self.dtype, self.num_emb_to_learn,
+                                args = self.args, num_rules = self.args.n_r, num_feats = self.num_otus)
+        plot_distribution(self, {f'kappa': self.kappa_prior}, self.dir)
+        if device is not None:
+            self.model = self.model.to(device)
 
-            self.model.init_params(self.init_args, device = device)
+        self.model.init_params(self.init_args, device = device)
 
-            self.logging_dict = {b: [] for b, a in self.model.named_parameters()}
+        self.logging_dict = {b: [] for b, a in self.model.named_parameters()}
 
-            self.loss_func = moduleLoss(self.model, self.args, self.kappa_prior,
-                                        self.normal_emb,
-                                        self.dtype, device=self.device)
-        else:
-            self.emb_dim = self.args.emb_dim
-            self.model = empty_model(self.args.n_d, self.emb_dim, self.dtype, self.num_otus)
-            if device is not None:
-                self.model = self.model.to(device)
-            self.logging_dict={}
-            self.loss_func = empty_loss()
+        self.loss_func = moduleLoss(self.model, self.args, self.kappa_prior,
+                                    self.normal_emb,
+                                    self.dtype, device=self.device)
 
 
     def init_w_kmeans(self,emb_locs, size: list, dist_mat = None):
@@ -219,23 +200,13 @@ class moduleLit():
         # self.negbin_det = create_negbin(self.args.z_mean, self.args.z_var)
         if self.learn_embeddings == 0:
             if self.args.emb_dim is None:
-                if self.args.use_pca==1:
-                    self.emb_dim, self.dist_emb, self.dist_matrix_embed = test_d_dimensions_pca(
-                        self.dist_matrix.shape[0], self.dist_matrix, self.args.seed, self.args.expl_var_cutoff)
-                    print(f'\nFor {self.dtype}, dimension {self.emb_dim} has an explained variance below the cutoff of {self.args.expl_var_cutoff}')
-                else:
-                    d = np.arange(2, 31)
-                    self.emb_dim, self.dist_emb, self.dist_matrix_embed, pval = test_d_dimensions(d, self.dist_matrix, self.args.seed)
-                    print(
-                        f'\nFor {self.dtype}, dimension {self.emb_dim} has a p-value of {pval}')
+                d = np.arange(2, 31)
+                self.emb_dim, self.dist_emb, self.dist_matrix_embed, pval = test_d_dimensions(d, self.dist_matrix, self.args.seed)
             else:
                 self.emb_dim = int(self.args.emb_dim)
-                if self.args.use_pca==1:
-                    self.dist_emb, self.dist_matrix_embed = compute_emb_pca(self.emb_dim, self.dist_matrix, self.args.seed)
-                else:
-                    self.dist_emb = compute_dist_emb_mds(self.dist_matrix, self.args.emb_dim, self.args.seed).astype(
-                        np.float32)
-                    self.dist_matrix_embed = compute_dist(self.dist_emb, self.dist_matrix.shape[0])
+                self.dist_emb = compute_dist_emb_mds(self.dist_matrix, self.args.emb_dim, self.args.seed).astype(
+                    np.float32)
+                self.dist_matrix_embed = compute_dist(self.dist_emb, self.dist_matrix.shape[0])
             pd.DataFrame(self.dist_emb, index=self.dist_matrix.index.values).to_csv(self.dir + '/' + self.dtype + '_emb_locs.csv', header=None, index=True)
 
         else:
@@ -243,13 +214,6 @@ class moduleLit():
                 self.args.emb_dim = 30.0
             self.emb_dim = int(self.args.emb_dim)
 
-        # self.dist_emb.to_csv(self.dir + '/emb_locs.csv')
-        # plt.figure(); plt.hist(self.dist_emb.values.flatten()); plt.savefig(self.dir + '/emb_locs.pdf'); plt.close();
-        # self.ref_median=calculate_radii_prior(self.dataset, pd.DataFrame(self.dist_matrix_embed,
-        #                                                                  index = self.dist_matrix.index.values,
-        #                                                                  columns= self.dist_matrix.columns.values),
-        #                                       self.dtype, self.args.multiplier)
-        # print(self.ref_median)
 
         self.emb_mean = 0
         self.emb_var = 1e8
@@ -259,27 +223,13 @@ class moduleLit():
 
 
         self.kappa_min = 0
-        if self.args.use_old_refs==1 and self.dtype=='otus':
-            if 'cdi' in self.args.data_otu:
-                self.kappa_prior_mean = np.exp(-0.98787415)
-                self.kappa_prior_var = 0.7533012
-                print('Using 16s reference values')
-            else:
-                self.kappa_prior_mean=np.exp(-1.1044373025931737)
-                self.kappa_prior_var = 0.405738891096145
-            if self.dtype=='metabs':
-                self.kappa_prior_mean =0.3806578
-                self.kappa_prior_var =0.33470775932073593
+        self.ref_median = calculate_radii_prior(self.dataset, pd.DataFrame(self.dist_matrix_embed,
+                                                                           index=self.dist_matrix.index.values,
+                                                                           columns=self.dist_matrix.columns.values),
+                                                self.dtype, self.args.multiplier)
 
-        else:
-            self.ref_median = calculate_radii_prior(self.dataset, pd.DataFrame(self.dist_matrix_embed,
-                                                                               index=self.dist_matrix.index.values,
-                                                                               columns=self.dist_matrix.columns.values),
-                                                    self.dtype, self.args.multiplier)
-
-            self.kappa_prior_mean = self.ref_median['mean']
-            self.kappa_prior_var = self.ref_median['var']
-            print(self.ref_median)
+        self.kappa_prior_mean = self.ref_median['mean']
+        self.kappa_prior_var = self.ref_median['var']
         self.kappa_max = self.dist_matrix_embed.flatten().max() + 0.01*self.dist_matrix_embed.flatten().max()
         if self.args.kappa_prior == 'trunc-normal':
             self.kappa_prior = TruncatedNormal(self.kappa_prior_mean, self.kappa_prior_var, self.kappa_min,
@@ -290,11 +240,7 @@ class moduleLit():
             raise ValueError('Provide a valid input argument for kappa prior')
 
             # (dist_fit, dist_mat, size:list, emb_dim, seed)
-        if 'basic' not in self.args.method:
-            size = [self.num_detectors]
-
-        else:
-            size = [self.num_rules, self.num_detectors]
+        size = [self.num_rules, self.num_detectors]
 
         self.kappa_init, self.eta_init, self.detector_otuids = self.init_w_kmeans(
             self.dist_emb, size, dist_mat=self.dist_matrix_embed)
@@ -303,42 +249,29 @@ class moduleLit():
 
 
     def set_init_params(self):
-        if self.args.init_with_LR:
-            self.z_out = init_selectors_by_LR(self.X, self.Y, self.detector_otuids, self.dtype)
-            self.alpha_init = sc.logit(self.z_out)*self.args.init_multiplier
+        self.alpha_init = np.zeros((self.num_rules, self.num_detectors))
+        if self.dtype == 'metabs':
+            self.thresh_min, self.thresh_max = np.min(self.X.flatten()) - 0.01*np.min(self.X.flatten()), \
+                                            np.max(self.X.flatten()) + 0.01*np.max(self.X.flatten())
         else:
-            if 'basic' not in self.args.method:
+            self.thresh_min, self.thresh_max = 0, 1
+        self.uniform_thresh = Uniform(torch.tensor(self.thresh_min).to(self.device), torch.tensor(self.thresh_max).to(self.device))
 
-                self.alpha_init = np.random.normal(0, 1, (self.num_detectors)) * self.args.init_multiplier
-            else:
-                if self.args.alpha_init_zeros:
-                    self.alpha_init = np.zeros((self.num_rules, self.num_detectors))
-                else:
-                    self.alpha_init = np.random.normal(0, 1, (self.num_rules, self.num_detectors)) * self.args.init_multiplier
-        if self.args.method=='basic':
-            if self.dtype == 'metabs':
-                self.thresh_min, self.thresh_max = np.min(self.X.flatten()) - 0.01*np.min(self.X.flatten()), \
-                                                np.max(self.X.flatten()) + 0.01*np.max(self.X.flatten())
-            else:
-                self.thresh_min, self.thresh_max = 0, 1
-            self.uniform_thresh = Uniform(torch.tensor(self.thresh_min).to(self.device), torch.tensor(self.thresh_max).to(self.device))
-
-            thresh_init = np.zeros((self.num_rules, self.num_detectors), dtype=np.float32)
-            all_init_detectors = list()
-            for l in range(self.num_rules):
-                init_detectors = np.zeros((self.X.shape[0], self.num_detectors))
-                for m in range(self.num_detectors):
-                    if len(self.detector_otuids[l][m]) > 0:
-                        x = self.X[:, self.detector_otuids[l][m]]
-                        if self.dtype == 'metabs':
-                            x_m = x.mean(1)
-                        else:
-                            x_m = x.sum(1)
-                        thresh_init[l, m] = x_m.mean()
+        thresh_init = np.zeros((self.num_rules, self.num_detectors), dtype=np.float32)
+        all_init_detectors = list()
+        for l in range(self.num_rules):
+            init_detectors = np.zeros((self.X.shape[0], self.num_detectors))
+            for m in range(self.num_detectors):
+                if len(self.detector_otuids[l][m]) > 0:
+                    x = self.X[:, self.detector_otuids[l][m]]
+                    if self.dtype == 'metabs':
+                        x_m = x.mean(1)
                     else:
-                        thresh_init[l, m] = 0
-        else:
-            thresh_init = np.zeros(1)
+                        x_m = x.sum(1)
+                    thresh_init[l, m] = x_m.mean()
+                else:
+                    thresh_init[l, m] = 0
+
         if self.args.kappa_prior == 'log-normal':
             self.kappa_init = np.log(self.kappa_init)
         self.init_args = {

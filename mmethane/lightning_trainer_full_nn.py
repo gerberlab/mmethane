@@ -20,7 +20,6 @@ warnings.filterwarnings("ignore")
 
 from joblib import Parallel, delayed
 # import datetime
-# from trainer_submodules_nam import moduleLit
 # from model_nam import ComboMDITRE
 from torch import optim
 # from lightning.pytorch.callbacks import ModelCheckpoint
@@ -82,9 +81,6 @@ def conditional_decorator(dec, condition, **kwargs):
 
 def parse(parser):
     parser.add_argument('--num_inner_folds', type=int, default=5)
-    parser.add_argument('--method', type=str, default='full_fc', choices=['basic', 'fc', 'nam_non_agg',
-                                                                        'full_fc', 'nam', 'no_rules',
-                                                                        'nam_with_interactions'])
     parser.add_argument('--plot_all_seeds', type=int, default=1)
     parser.add_argument('--batch_norm', type=int, default=1)
     parser.add_argument('--h_sizes', type=int, nargs='+', default=[12, 6])
@@ -106,7 +102,7 @@ def parse(parser):
     parser.add_argument('--data_otu', metavar='DIR',
                         help='path to otu dataset',
                         default='../datasets/ERAWIJANTARI/processed/erawijantari_ra/seqs.pkl')
-    parser.add_argument('--data_name', type=str,
+    parser.add_argument('--run_name', type=str,
                         help='Name of the dataset, will be used for log dirname',
 
                         # default='CDI_test_ISSUEFIXED',
@@ -668,7 +664,7 @@ def check_inputs_for_eval(OUTPUT_PATH, args_dict):
     with open(saved_args_path, 'r') as f:
         saved_args = json.load(f)
     for k, v in args_dict.items():
-        if k == 'cv_type' or k == 'parallel' or k == 'seed' or k == 'data_name' or k == 'out_path':
+        if k == 'cv_type' or k == 'parallel' or k == 'seed' or k == 'run_name' or k == 'out_path':
             continue
         if k not in saved_args:
             print(f'Warning: {k} not in saved argument')
@@ -844,7 +840,7 @@ if __name__ == '__main__':
     args, parser = parse(parser)
 
     if args.cv_type == 'eval':
-        check_inputs_for_eval(args.out_path + '/' + args.data_name + '/', args.__dict__)
+        check_inputs_for_eval(args.out_path + '/' + args.run_name + '/', args.__dict__)
 
     from models_fc import ComboMDITRE
     # ray.init()
@@ -855,7 +851,7 @@ if __name__ == '__main__':
     #     args.data = './datasets/cdi/' + args.data
     # with open(os.path.join(args.out_path, 'total_time.txt','w'))
     st = time.time()
-    run_training_with_folds(args, OUTPUT_PATH=args.out_path + '/' + args.data_name + '/')
+    run_training_with_folds(args, OUTPUT_PATH=args.out_path + '/' + args.run_name + '/')
     et = time.time() - st
     print(f"TRAINING {args.epochs} TOOK {np.round(et / 60, 3)} MINUTES")
     # with open(os.path.join(args.out_path, 'total_time.txt'), 'w') as f:

@@ -52,12 +52,13 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/mmethane/depricated" />
       <recent name="$PROJECT_DIR$/mditre_metabolites" />
       <recent name="$PROJECT_DIR$/utilities/" />
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.process_multi_seed_results">
+  <component name="RunManager" selected="Python.visualize">
     <configuration name="benchmarker" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="microbes-metabolites" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -200,8 +201,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.process_multi_seed_results" />
         <item itemvalue="Python.visualize" />
+        <item itemvalue="Python.process_multi_seed_results" />
         <item itemvalue="Python.run" />
         <item itemvalue="Python.lightning_trainer" />
         <item itemvalue="Python.semi_synthetic_data" />
@@ -271,7 +272,7 @@
       <workItem from="1731089684992" duration="38665000" />
       <workItem from="1732559156284" duration="15505000" />
       <workItem from="1732725984590" duration="10415000" />
-      <workItem from="1732744848274" duration="17953000" />
+      <workItem from="1732744848274" duration="35050000" />
     </task>
     <servers />
   </component>
@@ -459,6 +460,11 @@
           <line>89</line>
           <option name="timeStamp" value="539" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/mmethane/visualize.py</url>
+          <line>452</line>
+          <option name="timeStamp" value="589" />
+        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -482,7 +488,7 @@
     <SUITE FILE_PATH="coverage/microbes_metabolites$plot_nested_cv_results.coverage" NAME="plot_nested_cv_results Coverage Results" MODIFIED="1708810884620" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$plot_results.coverage" NAME="plot_results Coverage Results" MODIFIED="1728493193495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$process_data.coverage" NAME="process_data Coverage Results" MODIFIED="1707420291905" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/mmethane$visualize.coverage" NAME="visualize Coverage Results" MODIFIED="1732752921517" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mmethane" />
+    <SUITE FILE_PATH="coverage/mmethane$visualize.coverage" NAME="visualize Coverage Results" MODIFIED="1733100639772" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mmethane" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$local_dispatcher.coverage" NAME="local_dispatcher Coverage Results" MODIFIED="1720644081990" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />
     <SUITE FILE_PATH="coverage/mmethane$lightning_trainer.coverage" NAME="lightning_trainer Coverage Results" MODIFIED="1732552724406" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mmethane" />
     <SUITE FILE_PATH="coverage/microbes_metabolites$lightning_trainer.coverage" NAME="lightning_trainer Coverage Results" MODIFIED="1723169632392" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/mditre_metabolites" />

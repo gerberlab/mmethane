@@ -7,8 +7,8 @@ import sys
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config_file', type=str, default='../config_files/sample.cfg')
-    args = parser.parse_args()
+    parser.add_argument('-c', '--config_file', type=str, default='../config_files/tester.cfg')
+    args,_ = parser.parse_known_args()
     config = configparser.RawConfigParser(interpolation=configparser.ExtendedInterpolation())
     config.read(args.config_file)
 

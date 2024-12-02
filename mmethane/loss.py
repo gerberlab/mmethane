@@ -89,32 +89,17 @@ class moduleLoss():
 
         # reg_loss =  emb_normal_loss + kappa_normal_loss
         detectors = self.model.z_d
-        if self.args.neg_bin_prior:
-            loc_param = 1
-            det_abun_bc_loss = binary_concrete_loss(1 / k_alpha, loc_param, (1 - 2 * det_eps) * detectors + det_eps).sum()
-            z_loss = negbin_loss(detectors.sum(dim=-1),
-                                 self.args.z_mean, self.args.z_var).sum()
-            num_det_loss = z_loss
+
+        loc = self.args.p_d/(1-self.args.p_d)
+        if self.args.adj_detector_loss:
+            term = (N / (self.n_mult * Nf))
         else:
-            loc = self.args.p_d/(1-self.args.p_d)
-            if self.args.bc_loss_type == 'none':
-                det_abun_bc_loss = torch.tensor(0.0)
-            elif self.args.bc_loss_type == 'mean':
-                det_abun_bc_loss = binary_concrete_loss(1 / k_alpha, loc, (1 - 2 * det_eps) * detectors + det_eps).mean()
-                num_det_loss = det_abun_bc_loss - binary_concrete_loss(1 / k_alpha, 1, (1 - 2 * det_eps) *
-                                                                       detectors.detach() + det_eps).mean()
-            else:
-                # det_abun_bc_loss = binary_concrete_loss(1 / k_alpha, loc, (1 - 2 * det_eps) * detectors + det_eps).sum()
-                # num_det_loss = det_abun_bc_loss - binary_concrete_loss(1 / k_alpha, 1, (1 - 2 * det_eps) *
-                #                                                        detectors.detach() + det_eps).sum()
-                if self.args.adj_detector_loss:
-                    term=(N/(self.n_mult*Nf))
-                else:
-                    term=1
-                det_abun_bc_loss = binary_concrete_loss(1 / k_alpha, loc, (1 - 2 * det_eps) * detectors + det_eps).sum()*term
-                num_det_loss = det_abun_bc_loss - binary_concrete_loss(1 / k_alpha, 1, (1 - 2 * det_eps) *
-                                                                       detectors.detach() + det_eps).sum()*term
-            z_loss = torch.tensor(0.0)
+            term = 1
+
+        det_abun_bc_loss = binary_concrete_loss(1 / k_alpha, loc, (1 - 2 * det_eps) * detectors + det_eps).sum()*term
+        num_det_loss = det_abun_bc_loss - binary_concrete_loss(1 / k_alpha, 1, (1 - 2 * det_eps) *
+                                                               detectors.detach() + det_eps).sum()*term
+        z_loss = torch.tensor(0.0)
 
         reg_loss = emb_normal_loss + kappa_normal_loss + det_abun_bc_loss + z_loss
 
@@ -130,18 +115,13 @@ class moduleLoss():
 
 
 class mapLoss():
-    def __init__(self, model, args, normal_wts, normal_bias, n_d_prior, device = 'cpu', n_r_prior=None, n_d=20):
+    def __init__(self, model, args, normal_wts, normal_bias, device = 'cpu', n_d=20):
         self.model = model
         self.args = args
         self.normal_wts = normal_wts
-        self.n_d_prior = n_d_prior
         self.device = device
         self.normal_bias = normal_bias
-        self.n_r_prior = n_r_prior
         self.n_d = n_d
-        # if self.args.method=='basic' and n_r_prior is None:
-        #     raise ValueError('If model is not a neural network, a prior for the number of rules must be provided')
-
 
     def loss(self, outputs, labels, k_beta):
         train_loss = ce_loss(outputs, labels)
@@ -153,66 +133,42 @@ class mapLoss():
         # else:
         #     logreg_loss = torch.tensor(0.0)
         # det_loss_dict = {m:torch.tensor(0) for m in self.model.module_names}
-        if self.args.method!='full_fc':
-
             
-            if 'basic' in self.args.method:
-                rules = self.model.z_r
-                if self.args.neg_bin_prior:
-                    zr_loss = negbin_loss(rules.sum(), self.args.z_r_mean, self.args.z_r_var)
-                    num_rule_loss = zr_loss
-                # elif self.args.bernoulli_prior:
-                #     zr_loss = -self.n_r_prior.log_prob(rules.sum())
-                else:
-                    zr_loss = torch.tensor(0.0, device=self.device)
+        rules = self.model.z_r
 
-                l2_wts_loss = -self.normal_wts.log_prob(self.model.weight).sum()
-                # bias_loss = -self.normal_bias.log_prob(self.model.bias).sum()
-                bias_loss = torch.tensor(0., device=self.device)
+        l2_wts_loss = -self.normal_wts.log_prob(self.model.weight).sum()
+        # bias_loss = -self.normal_bias.log_prob(self.model.bias).sum()
+        bias_loss = torch.tensor(0., device=self.device)
 
-                rule_eps = (1 / k_beta) / 100
-                # if self.args.bc_loss_type == 'mean':
-                #     rule_bc_loss = binary_concrete_loss(1 / k_beta, 1, (1 - 2 * rule_eps) * rules + rule_eps).mean()
-                if self.args.bc_loss_type=='none':
-                    rule_bc_loss= torch.tensor(0.0)
-                else:
-                    if self.args.neg_bin_prior:
-                        loc_param = 1
-                    else:
-                        loc_param = (self.args.p_r / (1 - self.args.p_r))
-                    # rule_bc_loss = binary_concrete_loss(1 / k_beta, loc_param,
-                    #                                     (1 - 2 * rule_eps) * rules + rule_eps).sum()
-                    if self.args.adj_rule_loss:
-                        term=(N/(self.args.n_mult*self.n_d))
-                    else:
-                        term=1
-                    rule_bc_loss = binary_concrete_loss(1 / k_beta, loc_param, (1 - 2 * rule_eps) * rules + rule_eps).sum()*term
-                    num_rule_loss = rule_bc_loss - binary_concrete_loss(1 / k_beta, 1,
-                                                                        (1 - 2 * rule_eps) * rules.detach() + rule_eps).sum()*term
-                # rule_bc_loss = torch.tensor(0.0)
-            else:
-                l2_wts_loss = torch.tensor(0., device=self.device)
-                zr_loss = torch.tensor(0.,device=self.device)
-                rule_bc_loss = torch.tensor(0.,device=self.device)
-                bias_loss = torch.tensor(0., device=self.device)
-            reg_loss = l2_wts_loss + rule_bc_loss
-                       # + logreg_loss
-            loss_dict = {'train_loss': train_loss,
-                'num_rule_loss': num_rule_loss,
-                     'l2_wts_loss': l2_wts_loss,
-                     'rule_bc_loss': rule_bc_loss,
-                     # 'detector_bc_loss': det_abun_bc_loss,
+        rule_eps = (1 / k_beta) / 100
 
-                     # 'num_detector_loss':z_loss,
-                         'bias_loss':bias_loss
-                         # 'logreg_loss': logreg_loss,
-                     }
-
-            # for m in self.model.module_names:
-            #     loss_dict[m] = det_loss_dict[m]
+        loc_param = (self.args.p_r / (1 - self.args.p_r))
+        # rule_bc_loss = binary_concrete_loss(1 / k_beta, loc_param,
+        #                                     (1 - 2 * rule_eps) * rules + rule_eps).sum
+        if self.args.adj_rule_loss:
+            term = (N / (self.args.n_mult * self.n_d))
         else:
-            reg_loss = 0
-            loss_dict={'train_loss': train_loss}
+            term = 1
+        rule_bc_loss = binary_concrete_loss(1 / k_beta, loc_param, (1 - 2 * rule_eps) * rules + rule_eps).sum()*term
+        num_rule_loss = rule_bc_loss - binary_concrete_loss(1 / k_beta, 1,
+                                                            (1 - 2 * rule_eps) * rules.detach() + rule_eps).sum()*term
+            # rule_bc_loss = torch.tensor(0.0)
+
+        reg_loss = l2_wts_loss + rule_bc_loss
+                   # + logreg_loss
+        loss_dict = {'train_loss': train_loss,
+            'num_rule_loss': num_rule_loss,
+                 'l2_wts_loss': l2_wts_loss,
+                 'rule_bc_loss': rule_bc_loss,
+                 # 'detector_bc_loss': det_abun_bc_loss,
+
+                 # 'num_detector_loss':z_loss,
+                     'bias_loss':bias_loss
+                     # 'logreg_loss': logreg_loss,
+                 }
+
+        # for m in self.model.module_names:
+        #     loss_dict[m] = det_loss_dict[m]
 
         # Backprop for computing grads
         return train_loss, reg_loss, loss_dict

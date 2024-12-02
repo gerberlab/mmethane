@@ -62,11 +62,6 @@ if global_args.use_ray:
                                                                '*.job',
                                                                 'core.*']})
 
-# ray.init()
-# sys.setrecursionlimit(2097152)
-# TO DO:
-#   - add filtering transforming into function (only filter/transform training data)
-#   - fix plot results for two datasets
 
 def conditional_decorator(dec, condition, **kwargs):
     def decorator(func):
@@ -83,45 +78,89 @@ def conditional_decorator(dec, condition, **kwargs):
     return decorator
 
 def parse(parser):
-    parser.add_argument('--num_inner_folds', type=int, default=5)
-    parser.add_argument('--method', type=str, default='basic', choices=['basic', 'fc', 'nam_non_agg',
-                                                                        'full_fc', 'nam', 'no_rules',
-                                                                        'nam_with_interactions'])
-    parser.add_argument('--init_multiplier', type=float, default=0.1)
-    parser.add_argument('--plot_all_seeds', type=int, default=1)
-    parser.add_argument('--batch_norm', type=int, default=1)
-    parser.add_argument('--init_with_LR', type=int, default=0)
-    parser.add_argument('--add_interactions', type=int, default=0)
-    parser.add_argument('--add_logreg', type=int, default=0)
-    parser.add_argument('--lr_logreg', type=float, default=0.001)
-    parser.add_argument('--h_sizes', type=int, nargs='+', default=[12, 6])
-    parser.add_argument('--standardize_from_training_data', type=int, default=1)
-    parser.add_argument('--num_cpus', type=float, default=0.5)
-    parser.add_argument('--num_gpus', type=float, default=0)
+    # 1. Required input arguments most likely to need adjustment by the user
+    parser.add_argument('--data_met', metavar='DIR',
+                        help='path to metabolite dataset',
+                        default='../datasets/ERAWIJANTARI/processed/erawijantari_pubchem/mets.pkl')
+    parser.add_argument('--data_otu', metavar='DIR',
+                        help='path to otu dataset',
+                        default='../datasets/ERAWIJANTARI/processed/erawijantari_cts/seqs.pkl')
+    parser.add_argument('--run_name', type=str,
+                        help='Name for log folder',
+                        default="run_1",
+                        )
+    parser.add_argument('--seed', type=int, default=7,
+                        help='Set random seed for reproducibility')
+    parser.add_argument('--out_path', type=str, default='logs/', help="path to logs")
+    parser.add_argument('--dtype', type=str,default=['metabs','otus'],choices=['metabs', 'otus'],
+                        help='Set to one or the other if you want to run the model with just metabolite data inputs or '
+                             'just taxonomic data inputs', nargs='+')
+    parser.add_argument('--overwrite', type=bool, default=False, help="if a run with 'run_name' has already been completed,"
+                                                                      " set to True to overwrite previous result")
 
-    # Main model specific parameters
+    # 2. Arguments that control training and inference. Defaults are set to the defaults used to produce the results
+    #   in the corresponding manuscript
+    parser.add_argument('--min_epochs', default=100, type=int, metavar='N',
+                        help='number of minimum epochs to run')
+    parser.add_argument('--epochs', default=3000, type=int, metavar='N',
+                        help='number of total epochs to run')
+    parser.add_argument('--cv_type', type=str, default='kfold',
+                        choices=['loo', 'kfold'],
+                        help='Choose cross val type')
+    parser.add_argument('--kfolds', type=int, default=5,
+                        help='Number of folds for k-fold cross val')
+    parser.add_argument('--early_stopping', default=1, type=int)
+    parser.add_argument('--num_anneals', type=float, default=1)
+    parser.add_argument('--monitor', type=str, default='train_loss')
+    parser.add_argument('--schedule_lr', type=int, default=0,
+                        help='Schedule learning rate')
+    parser.add_argument('--parallel', type=int, default=6,help='run in parallel')
+    parser.add_argument('--annealing_limit', type=float, default=[0.05, 0.95], nargs='+')
+    parser.add_argument('--weight_decay', type=float, default=0)
+    parser.add_argument('--anneal_type', type=str, default='linear', choices=['linear', 'cosine', 'exp'])
+    parser.add_argument('--optimizer', type=str, default='NAdam', choices=['Adam','RMSprop','NAdam','RAdam','AdamW'])
+    parser.add_argument('--eta_min', type=float, default=0.00001)
+    parser.add_argument('--eta_min_frac', type=float, default=1e-2)
+    parser.add_argument('--patience', type=float, default=100)
+    parser.add_argument('--kmeans_noise', type=int, default=1)
+    parser.add_argument('--num_cpus', type=float, default=0.5, help='for Ray')
+    parser.add_argument('--num_gpus', type=float, default=0, help='for Ray')
+    parser.add_argument('--num_inner_folds', type=int, default=5)
+    parser.add_argument('--batch_size', type=int)
+
+    parser.add_argument('--plot_all_seeds', type=int, default=1)
+    parser.add_argument('--filter_data', type=int, default=1)
+    parser.add_argument('--plot_traces', type=int, default=1)
+
+
+    # 3. Arguments for model hyperparameters.
+
+    # 3A. Arguments for the portion of the model after the two data modalities have been combined (i.e., selection of
+    #   detectors of both modalities into rules and selection of rules for prediction, or layers iii & iv in Figure 1B of
+    #   the corresponding paper.
+    #   These arguments are largely called within this file, the ComboMDITRE class within 'models.py', and the mapLoss
+    #   class in 'loss.py'
     parser.add_argument('--n_r', type=int, default=10, help='Number of rules')
     parser.add_argument('--lr_beta', default=0.001, type=float,
                         help='Initial learning rate for binary concrete logits on rules.', nargs='+')
-    parser.add_argument('--metabs_lr_alpha', default=0.001, type=float,
-                        help='Initial learning rate for binary concrete logits on detectors.', nargs='+')
-    parser.add_argument('--otus_lr_alpha', default=0.001, type=float,
-                        help='Initial learning rate for binary concrete logits on detectors.', nargs='+')
-    parser.add_argument('--min_k_bc', default=1, type=float, help='Min Temperature for binary concretes')
-    parser.add_argument('--max_k_bc', default=10, type=float, help='Max Temperature for binary concretes')
     parser.add_argument('--lr_fc', default=0.01, type=float,
                         help='Initial learning rate for linear classifier weights and bias.', nargs='+')
     parser.add_argument('--lr_bias', default=0.01, type=float,
                         help='Initial learning rate for linear classifier weights and bias.', nargs='+')
+    parser.add_argument('--min_k_bc', default=1, type=float, help='Min Temperature for binary concretes')
+    parser.add_argument('--max_k_bc', default=10, type=float, help='Max Temperature for binary concretes')
     parser.add_argument('--w_var', type=float, default=1e4, help='Normal prior variance on weights.')
     parser.add_argument('--bias_var', type=float, default=1e4, help='Normal prior variance on bias.')
-    parser.add_argument('--z_r_mean', type=float, default=1, help='NBD Mean active rules')
-    parser.add_argument('--z_r_var', type=float, default=5, help='NBD variance of active rules')
-    parser.add_argument('--z_mean', type=float, default=1, help='NBD Mean active detectors per rule')
-    parser.add_argument('--z_var', type=float, default=5, help='NBD variance of active detectors per rule')
-    parser.add_argument('--adj_rule_loss', type=int, default=0)
+    parser.add_argument('--p_r', type=float, default=0.1)
 
-    # Metabolite model specific parameters
+
+    # 3B. Arguments for the metabolite feature-focus and detector activation portions of the model (layers i & ii in
+    #   Figure 1B). These are largely called in 'trainer_submodules.py', the featMDITRE class within 'models.py', and
+    #   the moduleLoss class within 'loss.py'
+    parser.add_argument('--metabs_n_d', type=int, default=10, help='Number of detectors')
+    parser.add_argument('--metabs_p_d', type=float, default=0.1)
+    parser.add_argument('--metabs_lr_alpha', default=0.001, type=float,
+                        help='Initial learning rate for binary concrete logits on detectors.', nargs='+')
     parser.add_argument('--metabs_lr_kappa', default=0.001, type=float, help='Initial learning rate for kappa.',
                         nargs='+')
     parser.add_argument('--metabs_lr_eta', default=0.001, type=float, help='Initial learning rate for eta.', nargs='+')
@@ -138,22 +177,15 @@ def parse(parser):
                         help='Min Temperature on heavyside logistic for threshold')
     parser.add_argument('--metabs_min_k_bc', default=0.5, type=float, help='Min Temperature for binary concretes')
     parser.add_argument('--metabs_max_k_bc', default=10, type=float, help='Max Temperature for binary concretes')
-    parser.add_argument('--metabs_n_d', type=int, default=10, help='Number of detectors')
-    parser.add_argument('--metabs_emb_dim', type=float)
-    parser.add_argument('--metabs_multiplier', type=float, default=10)
-    parser.add_argument('--metabs_expl_var_cutoff', type=float, default=0.05)
-    parser.add_argument('--metabs_use_pca', type=int, default=0)
-    parser.add_argument('--metabs_lr_nam', type=float, default=0.0001)
-    parser.add_argument('--metabs_neg_bin_prior', type=int, default=0)
-    parser.add_argument('--metabs_bernoulli_prior', type=int, default=1)
-    parser.add_argument('--metabs_init_clusters', type=str.lower,default='kmeans',
-                        choices=['kmeans','kmeansconstrained','family','genus','coresets','clades', 'new'])
-    parser.add_argument('--metabs_adj_n_d', type=int, default=0)
-    parser.add_argument('--metabs_kappa_mult', type=float, default=1e3)
-    parser.add_argument('--metabs_adj_kappa_loss', type=int, default=0)
-    parser.add_argument('--metabs_adj_detector_loss', type=int, default=0)
+    parser.add_argument('--metabs_emb_dim', type=float, help="if None, calculates best embedding dimension")
 
-    # Microbe model specific parameters
+
+    # 3C. Arguments for the microbe feature-focus and detector activation portions of the model (layers i & ii in
+    #   Figure 1B). These are largely called in 'trainer_submodules.py', the featMDITRE class within 'models.py', and
+    #   the moduleLoss class within 'loss.py'
+    parser.add_argument('--otus_n_d', type=int, default=10, help='Number of detectors')
+    parser.add_argument('--otus_lr_alpha', default=0.001, type=float,
+                        help='Initial learning rate for binary concrete logits on detectors.', nargs='+')
     parser.add_argument('--otus_lr_kappa', default=0.001, type=float, help='Initial learning rate for kappa.')
     parser.add_argument('--otus_lr_eta', default=0.001, type=float, help='Initial learning rate for eta.')
     parser.add_argument('--otus_lr_emb', default=0.001, type=float, help='Initial learning rate for emb.')
@@ -168,110 +200,36 @@ def parse(parser):
                         help='Min Temperature on heavyside logistic for threshold')
     parser.add_argument('--otus_min_k_bc', default=1, type=float, help='Min Temperature for binary concretes')
     parser.add_argument('--otus_max_k_bc', default=10, type=float, help='Max Temperature for binary concretes')
-    parser.add_argument('--otus_n_d', type=int, default=10, help='Number of detectors')
     parser.add_argument('--otus_emb_dim', type=float)
+    parser.add_argument('--otus_p_d', type=float, default=0.1)
+
+
+    # 4. Additional misc args used during model developement (Changing defaults is not recommended)
+    parser.add_argument('--add_logreg', type=int, default=0)
+    parser.add_argument('--standardize_from_training_data', type=int, default=1)
+    parser.add_argument('--metabs_multiplier', type=float, default=10)
+    parser.add_argument('--metabs_kappa_mult', type=float, default=1e3)
+    parser.add_argument('--metabs_adj_detector_loss', type=int, default=0)
+    parser.add_argument('--metabs_adj_n_d', type=int, default=0)
+    parser.add_argument('--metabs_adj_kappa_loss', type=int, default=0)
     parser.add_argument('--otus_multiplier', type=float, default=1)
-    parser.add_argument('--otus_expl_var_cutoff', type=float, default=0.05)
-    parser.add_argument('--otus_use_pca', type=int, default=0)
-    parser.add_argument('--otus_lr_nam', type=float, default=0.0001)
-    parser.add_argument('--otus_neg_bin_prior', type=int, default=0)
-    parser.add_argument('--otus_bernoulli_prior', type=int, default=1)
-    parser.add_argument('--otus_init_clusters', type=str.lower,default='kmeans',
-                        choices=['kmeans', 'kmeansconstrained', 'family', 'genus', 'coresets','clades','new'])
     parser.add_argument('--otus_adj_n_d', type=int, default=0)
     parser.add_argument('--otus_kappa_mult', type=float, default=1e3)
     parser.add_argument('--otus_adj_kappa_loss', type=int, default=0)
     parser.add_argument('--otus_adj_detector_loss', type=int, default=0)
-
-    # Training Parameters
-    # ('../datasets/HE/processed/he_pubchem/2_mets.pkl',
-    #  '../datasets/HE/processed/he_cts/2_seqs.pkl'),
-    parser.add_argument('--data_met', metavar='DIR',
-                        help='path to metabolite dataset',
-                        default='../datasets/ERAWIJANTARI/processed/erawijantari_pubchem/mets.pkl')
-    parser.add_argument('--data_otu', metavar='DIR',
-                        help='path to otu dataset',
-                        default='../datasets/ERAWIJANTARI/processed/erawijantari_cts/seqs.pkl')
-    parser.add_argument('--run_name', type=str,
-                        help='Name for log folder',
-                        default="run_1",
-                        )
-    parser.add_argument('--min_epochs', default=100, type=int, metavar='N',
-                        help='number of minimum epochs to run')
-    parser.add_argument('--epochs', default=3000, type=int, metavar='N',
-                        help='number of total epochs to run')
-    parser.add_argument('--seed', type=int, default=7,
-                        help='Set random seed for reproducibility')
-    parser.add_argument('--cv_type', type=str, default='kfold',
-                        choices=['loo', 'kfold', 'one', 'eval'],
-                        help='Choose cross val type')
-    parser.add_argument('--kfolds', type=int, default=5,
-                        help='Number of folds for k-fold cross val')
-    parser.add_argument('--early_stopping', default=1, type=int)
-    parser.add_argument('--validate', default=0, type=int)
-    parser.add_argument('--test', default=1, type=int)
-    # parser.add_argument('--emb_dim', type = float, default=20)
-    parser.add_argument('--out_path', type=str, default='logs/', help = "path to logs")
-    parser.add_argument('--num_anneals', type=float, default=1)
-    parser.add_argument('--monitor', type=str, default='train_loss')
-    parser.add_argument('--train', type=int, default=1)
-    parser.add_argument('--dtype', type=str,
-                        default=['metabs','otus'],
-                        choices=['metabs', 'otus'],
-                        help='Choose type of data', nargs='+')
-    parser.add_argument('--schedule_lr', type=int, default=0,
-                        help='Schedule learning rate')
-    parser.add_argument('--parallel', type=int, default=6,
-                        help='run in parallel')
     parser.add_argument('--only_mets_w_emb', type=int, default=1, help='whether or not keep only mets with embeddings')
     parser.add_argument('--only_otus_w_emb', type=int, default=1, help='whether or not keep only otus with embeddings')
     parser.add_argument('--learn_emb', type=int, default=0, help='whether or not to learn embeddings')
-    parser.add_argument('--debug', type=int, default=0)
-    # parser.add_argument('--lr_master',type=float, default=None)
-    parser.add_argument('--from_saved_files', type=int, default=0)
     parser.add_argument('--use_k_1', type=int, default=1)
     parser.add_argument('--use_noise', type=int, default=0)
     parser.add_argument('--noise_anneal', type=float, default=[1, 1], nargs='+')
-    parser.add_argument('--remote', type=int, default=0)
-    parser.add_argument('--annealing_limit', type=float, default=[0.05, 0.95], nargs='+')
-    parser.add_argument('--weight_decay', type=float, default=0)
-    parser.add_argument('--anneal_type', type=str, default='linear', choices=['linear', 'cosine', 'exp'])
-    parser.add_argument('--div_loss', type=int, default=0)
-    # parser.add_argument('--p_d', type=float, default=0.1)
-    parser.add_argument('--metabs_p_d', type=float, default=0.1)
-    parser.add_argument('--otus_p_d', type=float, default=0.1)
-    parser.add_argument('--p_r', type=float, default=0.1)
-    parser.add_argument('--old', type=int, default=0)
-    parser.add_argument('--neg_bin_prior', type=int, default=0)
-    parser.add_argument('--bernoulli_prior', type=int, default=1)
     parser.add_argument('--kappa_eta_prior', type=int, default=1)
+    parser.add_argument('--kappa_prior', type=str, default='log-normal', choices=['log-normal', 'trunc-normal'])
     parser.add_argument('--n_mult', type=int, default=1)
     parser.add_argument('--hard_otu', type=int, default=0)
     parser.add_argument('--hard_bc', type=int, default=0)
-    parser.add_argument('--filter_data', type=int, default=1)
-    parser.add_argument('--batch_size', type=int, default=None)
-    parser.add_argument('--kappa_prior', type=str, default='log-normal', choices=['log-normal', 'trunc-normal'])
-    parser.add_argument('--use_old_refs', type=int, default=0)
-    parser.add_argument('--z_loss_mult', type=float, default=1)
-    parser.add_argument('--p_d_grid', nargs='+', type=float,
-                        # default=None)
-                        default=np.logspace(-4, -0.5, 6).tolist())
-    parser.add_argument('--p_r_grid', nargs='+', type=float,
-                        # default=None)
-                        default=np.logspace(-4, -1, 4).tolist())
-    # default=[1,2,5,7,10,12,15,17,20])
-    parser.add_argument('--param_name', type=str, nargs='+', default=['p_d', 'p_r'])
-    parser.add_argument('--nested_cv', type=int, default=0)
-    parser.add_argument('--nested_cv_metric', type=str, default='f1')
     parser.add_argument('--adj_pd', type=int, default=0)
-    parser.add_argument('--dropout', type=float, default=0)
-    parser.add_argument('--plot_traces', type=int, default=1)
-    parser.add_argument('--optimizer', type=str, default='NAdam', choices=['Adam','RMSprop','NAdam','RAdam','AdamW'])
-    parser.add_argument('--eta_min', type=float, default=0.00001)
-    parser.add_argument('--eta_min_frac', type=float, default=1e-2)
-    parser.add_argument('--patience', type=float, default=100)
-    parser.add_argument('--kmeans_noise', type=int, default=1)
-    parser.add_argument('--alpha_init_zeros', type=int, default=1)
+    parser.add_argument('--adj_rule_loss', type=int, default=0)
 
     # parser.add_argument('--full_fc', type=int, default=1)
     args, _ = parser.parse_known_args()
@@ -356,8 +314,8 @@ class LitMDITRE(pl.LightningModule):
                             'train acc 0': [], 'train acc 1': [], 'val acc 0': [], 'val acc 1': [], 'test acc 0': [],
                             'test acc 1': [], 'num active detectors':[],'num active rules':[]}
         # self.loss_func = mapLoss(self.model, self.args, self.normal_wts, self.bernoulli_rules, self.bernoulli_det)
-        self.loss_func = mapLoss(self.model, self.args, self.normal_wts, self.normal_bias, self.n_detectors_prior, device=device,
-                                 n_r_prior=self.n_rules_prior, n_d = self.num_detectors)
+        self.loss_func = mapLoss(self.model, self.args, self.normal_wts, self.normal_bias, device=device,
+                                 n_d = self.num_detectors)
         self.running_loss_dict = {}
         self.grad_dict = {}
         for b, a in self.model.named_parameters():
@@ -373,26 +331,11 @@ class LitMDITRE(pl.LightningModule):
         loss_, reg_loss, loss_dict = self.loss_func.loss(outputs, labels, kdict['k_beta'])
         loss = loss_.clone()
         loss += reg_loss
-        f=None
-        if self.current_epoch == 1990:
-            f=open(self.dir + '/frac_bc_loss.txt', 'w')
         for name, module in self.class_dict.items():
             reg_l, ldict = module.loss_func.loss(kdict[name + '_k_alpha'], len(labels), self.class_dict[name].num_features)
-            if self.current_epoch == 1990:
-                # with open(self.dir + '/frac_bc_loss.txt', 'w') as f:
-                f.write(name)
-                f.write(f'Fraction of BC loss: {len(labels) /(args.n_mult*self.class_dict[name].num_features)}\n')
-                f.write(
-                    f'Fraction of kappa loss: {len(labels) /(self.class_dict[name].num_features * 1e5)}\n')
-                f.write('\n')
             loss += reg_l
             loss_dict.update(ldict)
-            # if self.args.div_loss == 1:
-            #     div_loss = diversity_loss(self.model.z_r, self.model.z_d, module.model.wts)
-            #     loss_dict[name + '_diversity_loss'] = div_loss
-            #     loss += div_loss
-        if f is not None:
-            f.close()
+
         return loss, loss_dict
 
     def set_model_hparams(self):
@@ -403,19 +346,11 @@ class LitMDITRE(pl.LightningModule):
         self.normal_wts = Normal(self.wts_mean, self.args.w_var)
         self.normal_bias=Normal(self.wts_mean, self.args.bias_var)
 
-        # Set mean and variance for neg bin prior for rules
-        if self.args.neg_bin_prior == 1:
-            self.n_rules_prior = create_negbin(self.args.z_r_mean, self.args.z_r_var, device=device)
-            self.n_detectors_prior = create_negbin(self.args.z_mean, self.args.z_var, device=device)
-        else:
-            self.n_rules_prior = None
-            self.n_detectors_prior = None
-
         # self.alpha_bc = BinaryConcrete(loc=1, tau=1 / self.k_dict['k_alpha']['min'])
         # self.beta_bc = BinaryConcrete(loc=1, tau=1 / self.k_dict['k_alpha']['min'])
 
     def set_init_params(self):
-        beta_init = np.random.normal(0, 1, (self.num_rules)) * self.args.init_multiplier
+        beta_init = np.random.normal(0, 1, (self.num_rules)) * 0.1
         w_init = np.random.normal(0, 1, (1, self.num_rules))
         bias_init = np.zeros((1))
 
@@ -431,8 +366,7 @@ class LitMDITRE(pl.LightningModule):
     def training_step(self, batch, batch_idx):
 
         for mclass in self.class_dict.values():
-            if self.args.method == 'basic':
-                mclass.model.thresh.data.clamp_(mclass.thresh_min, mclass.thresh_max)
+            mclass.model.thresh.data.clamp_(mclass.thresh_min, mclass.thresh_max)
             if self.args.kappa_prior == 'trunc-normal':
                 mclass.model.kappa.data.clamp_(mclass.kappa_min, mclass.kappa_max)
         xdict, y = batch
@@ -477,23 +411,7 @@ class LitMDITRE(pl.LightningModule):
         if self.args.add_logreg and self.current_epoch == self.args.epochs - 1:
             self.logreg_model, self.train_mean, self.train_stdev = run_logreg(xdict, y)
 
-        # opt = self.optimizers()
-        # opt.zero_grad()
         self.loss, self.loss_dict = self.get_loss(y_hat, y, self.k_step)
-        # self.manual_backward(self.loss)
-        # opt.step()
-        # sch = self.lr_schedulers()
-        # sch.step()
-        # for opt in self.optimizer_ls:
-        #     opt.zero_grad()
-        # self.manual_backward(self.loss)
-        # for opt in self.optimizer_ls:
-        #     opt.step()
-        # for sch in self.scheduler_ls:
-        #     sch.step()
-
-
-
 
         self.train_preds.extend(y_hat.sigmoid())
         self.train_true.extend(y)
@@ -538,9 +456,8 @@ class LitMDITRE(pl.LightningModule):
         self.scores_dict['train loss'].append(self.loss)
         self.scores_dict['train acc 0'].append(acc_0)
         self.scores_dict['train acc 1'].append(acc_1)
-        if self.args.method!='full_fc':
-            self.scores_dict['num active detectors'].append((self.model.z_d.flatten() > 0.1).sum().item())
-            self.scores_dict['num active rules'].append((self.model.z_r.flatten() > 0.1).sum().item())
+        self.scores_dict['num active detectors'].append((self.model.z_d.flatten() > 0.1).sum().item())
+        self.scores_dict['num active rules'].append((self.model.z_r.flatten() > 0.1).sum().item())
         self.train_true, self.train_preds = [], []
         return (None)
 
@@ -688,27 +605,7 @@ class LitMDITRE(pl.LightningModule):
             return [self.optimizer_0], [self.scheduler_0]
         else:
             return [self.optimizer_0]
-        #     if self.args.optimizer=='Adam':
-        #         self.optimizer_ls.append(optim.Adam([lr_], weight_decay=self.args.weight_decay))
-        #     elif self.args.optimizer=='RMSprop':
-        #         self.optimizer_ls.append(optim.RMSprop([lr_], weight_decay=self.args.weight_decay))
-        #     elif self.args.optimizer == 'NAdam':
-        #         self.optimizer_ls.append(optim.NAdam([lr_], weight_decay=self.args.weight_decay))
-        #     elif self.args.optimizer == 'RAdam':
-        #         self.optimizer_ls.append(optim.RAdam([lr_], weight_decay=self.args.weight_decay))
-        #     elif self.args.optimizer == 'AdamW':
-        #         self.optimizer_ls.append(optim.AdamW([lr_], weight_decay=self.args.weight_decay))
-        #     else:
-        #         ValueError("Please provide correct argument for optimizer. Options are Adam or RMSprop.\n"
-        #                    "To add additional options, see lightning_trainer.py, lines 617-620")
-        #     if self.args.schedule_lr == 1:
-        #         self.scheduler_ls.append(optim.lr_scheduler.CosineAnnealingLR(self.optimizer_ls[-1],
-        #                                                                  int(self.args.epochs / self.args.num_anneals),
-        #                                                                  eta_min=self.args.eta_min_frac*lr))
-        # if self.args.schedule_lr == 1:
-        #     return self.optimizer_ls, self.scheduler_ls
-        # else:
-        #     return self.optimizer_ls
+
 
 
 class mditreDataset(Dataset):
@@ -751,16 +648,8 @@ def hyperparam_training(inner_train_ixs, inner_test_ixs, param_val, train_datase
                                            save_top_k=0,
                                            verbose=False)]
 
-        # param_scores = {}
-        # args.__dict__['hard_otu'] = 1
-        # args.__dict__['hard_bc'] = 1
         for i, param_name in enumerate(args.param_name):
             args.__dict__[param_name] = param_val[i]
-            # if self.args.adj_pd:
-            #     if param_name=='p_d':
-            #         self.args.__dict__[param_name] = 2*param_val
-            # if param_name == 'z_mean' or param_name == 'z_r_mean':
-            #     args.__dict__[param_name.split('mean')[0] + 'var'] = param_val + 2
         model = LitMDITRE(args, inner_train_dataset_dict,
                           dir=outpath + f'seed_{args.seed}',
                           learn_embeddings=args.learn_emb == 1)
@@ -785,9 +674,6 @@ def hyperparam_training(inner_train_ixs, inner_test_ixs, param_val, train_datase
                 f'Training {args.epochs} epochs took {np.round((time.time() - st_inner) / 60,5)} minutes')
             f.write('\n\n')
 
-        # for file in os.listdir(logger.log_dir):
-        #     if file.startswith('events.out.tfevents.'):
-        #         os.remove(os.path.join(logger.log_dir, file))
         return param_val, val_score, model.y_val, model.y_hat_val
 
 @conditional_decorator(ray.remote, global_args.use_ray, num_gpus=0)
@@ -797,7 +683,7 @@ class CVTrainer():
         self.outpath = OUTPUT_PATH
         self.Y = y
         self.y = y.values
-        self.overwrite_previous=False
+        self.overwrite_previous=args.overwrite
 
     def check_if_fold_already_finished(self, fold, log_dir):
         if os.path.isdir(log_dir):
@@ -808,22 +694,15 @@ class CVTrainer():
                     inner_files = os.listdir(log_dir + '/' + file_folder)
                     for file in inner_files:
                         if 'pred_results' in file:
-                            # if file_folder != 'last':
-                            #     k = 'best'
-                            # else:
-                            #     k = file_folder
                             pred_ls = pd.read_csv(log_dir + '/' + file_folder + '/' + file, index_col=0)
-                            print('Fold {0} testing already finished'.format(fold))
+                            print('Fold {0} training is complete. If you want to overwrite these results, use overwrite=True'.format(fold))
                             return pred_ls
                 else:
                     if 'pred_results' in file_folder:
                         pred_ls = pd.read_csv(log_dir + '/' + file_folder, index_col=0)
-                        print('Fold {0} testing already finished'.format(fold))
+                        print('Fold {0} training is complete. If you want to overwrite these results, use overwrite=True'.format(fold))
                         return pred_ls
-                    # pred_ls.append(pd.read_csv(tb_logger.log_dir + '/' + file))
-            # if len(pred_ls.keys())>0:
-            #     print('Fold {0} testing already finished'.format(fold))
-            #     return pred_ls
+
 
     # @profile
     def test_model(self, model, trainer, test_ixs, ckpt_path, test_loader):
@@ -898,7 +777,7 @@ class CVTrainer():
 
         callbacks = [ModelCheckpoint(save_last=False,
                                      dirpath=tb_logger.log_dir,
-                                     save_top_k=self.args.validate,
+                                     save_top_k=1,
                                      verbose=False,
                                      monitor=monitor,
                                      every_n_epochs=None, every_n_train_steps=None, train_time_interval=None,
@@ -916,44 +795,21 @@ class CVTrainer():
                              )
 
         if self.args.filter_data:
-            train_dataset_dict, test_dataset_dict = split_and_preprocess_dataset(dataset_dict, train_ixs,
-                                                                                 test_ixs, preprocess=True,
-                                                                                 sqrt_transform = self.args.method=='full_fc',
-                                                                                 # clr_transform_otus=self.args.method == 'full_fc',
-                                                                                 clr_transform_otus=False,
-                                                                                 standardize_otus=False,
-                                                                                 # standardize_otus=self.args.method == 'full_fc',
-                                                                                 standardize_from_training_data=self.args.standardize_from_training_data,
-                                                                                 logdir=tb_logger.log_dir)
+            pp=True
         else:
-            train_dataset_dict, test_dataset_dict = split_and_preprocess_dataset(dataset_dict, train_ixs,
-                                                                                 test_ixs, preprocess=False,
-                                                                                 sqrt_transform=self.args.method == 'full_fc',
-                                                                                 # clr_transform_otus=self.args.method == 'full_fc',
-                                                                                 standardize_from_training_data=self.args.standardize_from_training_data,
-                                                                                 clr_transform_otus=False,
-                                                                                 standardize_otus=False,
-                                                                                 # standardize_otus=self.args.method == 'full_fc',
-                                                                                 logdir=tb_logger.log_dir)
-            if 'otus' in dataset_dict.keys():
-                dataset_dict['otus']['X'] = dataset_dict['otus']['X'].divide(dataset_dict['otus']['X'].sum(1),
-                                                                             axis='index')
-        # if self.args.n_r is None or self.args.n_r == 0:
-        #     self.args.n_r = 10
-        # if self.args.p_r is None or self.args.p_r==0:
-        #     self.args.p_r = 0.1
-        # if (self.args.metabs_n_d is None or self.args.metabs_n_d==0) and 'metabs' in train_dataset_dict.keys():
-        #     self.args.metabs_n_d = int(np.floor(dataset_dict['metabs']['X'].shape[1]/15))
-        #     if self.args.metabs_p_d is None or self.args.metabs_p_d==0:
-        #         self.args.metabs_p_d=np.floor(dataset_dict['metabs']['X'].shape[1])/100
-        #         if self.args.metabs_p_d >0.5:
-        #             self.args.metabs_p_d = 0.5
-        # if (self.args.otus_n_d is None or self.args.otus_n_d==0) and 'otus' in train_dataset_dict.keys():
-        #     self.args.otus_n_d = int(np.floor(dataset_dict['otus']['X'].shape[1]/15))
-        #     if self.args.otus_p_d is None or self.args.otus_p_d==0:
-        #         self.args.otus_p_d=np.floor(dataset_dict['otus']['X'].shape[1]/100)
-        #         if self.args.otus_p_d >0.5:
-        #             self.args.otus_p_d = 0.5
+            pp=False
+        train_dataset_dict, test_dataset_dict = split_and_preprocess_dataset(dataset_dict, train_ixs,
+                                                                             test_ixs, preprocess=pp,
+                                                                             sqrt_transform = False,
+                                                                             clr_transform_otus=False,
+                                                                             standardize_otus=False,
+                                                                             standardize_from_training_data=self.args.standardize_from_training_data,
+                                                                             logdir=tb_logger.log_dir)
+
+        if 'otus' in dataset_dict.keys() and pp is False:
+            dataset_dict['otus']['X'] = dataset_dict['otus']['X'].divide(dataset_dict['otus']['X'].sum(1),
+                                                                         axis='index')
+
         train_loader = DataLoader(mditreDataset(train_dataset_dict), batch_size=self.batch_size,
                                   shuffle=True)
 
@@ -979,137 +835,31 @@ class CVTrainer():
         except:
             pass
 
-        if self.args.validate == 1:
-            inner_train_ixs, inner_val_ixs = train_test_split(np.arange(len(train_ixs)), test_size=0.1,
-                                                              stratify=self.y[train_ixs],
-                                                              random_state=self.args.seed)
-            inner_train_dataset_dict, val_dataset_dict = split_and_preprocess_dataset(train_dataset_dict,
-                                                                                      inner_train_ixs,
-                                                                                      inner_val_ixs,
-                                                                                      preprocess=False)
-            val_loader = DataLoader(mditreDataset(val_dataset_dict), batch_size=self.batch_size, shuffle=False)
-            train_loader = DataLoader(mditreDataset(inner_train_dataset_dict), batch_size=self.batch_size,
-                                      shuffle=True)
-            trainer.fit(self.lit_model, train_dataloaders=train_loader, val_dataloaders=val_loader)
-            torch.save(self.lit_model.model.state_dict(), os.path.join(tb_logger.log_dir,'trained_state_dict.pt'))
-            test_loader = DataLoader(mditreDataset(test_dataset_dict), batch_size=self.batch_size, shuffle=False)
-            # self, model, trainer, test_ixs, ckpt_path, test_loader
-            path = self.outpath + f'seed_{args.seed}' + '/' + vers + '/'
-            tmp = [f for f in os.listdir(path) if ('.ckpt' in f and 'epoch' in f)][0]
-            ckpt_path = path + tmp
-            preds = self.test_model(self.lit_model, trainer, self.test_ixs, ckpt_path, test_loader)
-            best_epoch = int(tmp.split('epoch=')[-1].split('-')[0])
-        else:
-            best_epoch = -1
-            # if self.args.nested_cv and (self.args.param_grid is not None and len(self.args.param_grid)>1):
-            if self.args.nested_cv:
-                print('HYPERPARAMETER TRAINING')
-                if not os.path.isdir(tb_logger.log_dir):
-                    os.mkdir(tb_logger.log_dir)
-                tr_y = self.y[train_ixs]
-                if np.sum(tr_y) < self.args.num_inner_folds:
-                    nfolds = np.sum(tr_y)
-                elif (len(tr_y) - np.sum(tr_y)) < self.args.num_inner_folds:
-                    nfolds = (len(tr_y) - np.sum(tr_y))
-                else:
-                    nfolds = self.args.num_inner_folds
-                tr_ixs, ts_ixs = cv_kfold_splits(np.zeros(tr_y.shape[0]), tr_y, num_splits=nfolds, seed=args.seed)
-                input_list = list(itertools.product(list(zip(tr_ixs, ts_ixs, list(range(len(tr_ixs))))), self.args.p_d_grid,
-                                               self.args.p_r_grid))
-                # hyperparam_results=[]
-                # with open(f"{tb_logger.log_dir}/time.txt", "w") as f:
-                #     f.write(f"INNER FOLD LOG\n")
-                inner_start = time.time()
-                running_results=[]
-                # hyperparam_training(inner_train_ixs, inner_test_ixs, param_val, train_dataset_dict, logger, batch_size, args, outpath, inner_fold=0):
-                for (inner_train_ixs, inner_test_ixs, fold_iter), pa, pb in input_list:
-                    if global_args.use_ray:
-                        res = hyperparam_training.remote(inner_train_ixs,
-                                                                                   inner_test_ixs,
-                                                                                   (pa, pb),
-                                                                                   train_dataset_dict,
-                                                                                   tb_logger, self.batch_size,
-                                                                                   self.args, self.outpath,
-                                                                                   inner_fold=fold_iter)
-                    else:
-                        res = hyperparam_training(inner_train_ixs,inner_test_ixs,(pa, pb),
-                                                                                   train_dataset_dict,tb_logger,self.batch_size,
-                                                                                   self.args, self.outpath,inner_fold=fold_iter)
-                    running_results.append(res)
-                    # inputs_ran.append(inputs)
-                    inner_time = time.time() - inner_start
-                param_ls_, score_ls_, y_true_, y_pred_ = list(zip(*running_results))
-                if global_args.use_ray:
-                    param_ls_, score_ls_, y_true_, y_pred_ = ids_to_vals(param_ls_), ids_to_vals(
-                        score_ls_), ids_to_vals(y_true_), ids_to_vals(y_pred_)
-                if len(param_ls_) != len(list(set(param_ls_))):
-                    score_ls, param_ls = [], []
-                    for param_val in list(set(param_ls_)):
-                        param_val = ids_to_vals(param_val)
-                        pixs = np.array([i for i, p in enumerate(param_ls_) if p == param_val])
-                        # y_true_ = [list(y.numpy()) for y in y_true_]
-                        # y_pred_ = [list(y.numpy()) for y in y_pred_]
-                        y_val_true_tot = []
-                        y_val_pred_tot = []
-                        for pi in pixs:
-                            y_val_true_tot.extend(list(ids_to_vals(y_true_[pi].numpy())))
-                            y_val_pred_tot.extend(list(ids_to_vals(y_pred_[pi].numpy())))
-                        # y_val_true_tot = list(itertools.chain.from_iterable(np.array(y_true_)[pixs]))
-                        # y_val_pred_tot = list(itertools.chain.from_iterable(np.array(y_pred_)[pixs]))
-                        if self.args.nested_cv_metric == 'f1':
-                            score_ls.append(f1_score(np.array(y_val_true_tot), np.array(y_val_pred_tot) > 0.5, average='weighted'))
-                        elif self.args.nested_cv_metric == 'auc':
-                            score_ls.append(roc_auc_score(np.array(y_val_true_tot), np.array(y_val_pred_tot), average='weighted'))
-                        else:
-                            score_ls.append(np.median(np.array(ids_to_vals(score_ls_)[pixs])))
-                        param_ls.append(param_val)
-                else:
-                    score_ls, param_ls = score_ls_, param_ls_
-                best_param = np.array(param_ls)[np.argmax(np.array(score_ls))]
-                best_param_file = tb_logger.log_dir + '/hparam_best.txt'
-                if os.path.isfile(best_param_file):
-                    met = 'a'
-                else:
-                    met = 'w'
-                with open(best_param_file, met) as f:
-                    f.write(f'\nFold {fold} best param: {best_param}\n')
-                # with open(tb_logger.log_dir + '/hyperparam_tuning.txt',
-                for param_name in self.args.param_name:
-                    setattr(self.lit_model.args, param_name, best_param)
-
-            test_loader = DataLoader(mditreDataset(test_dataset_dict), batch_size=self.batch_size, shuffle=False)
-            trainer.fit(self.lit_model, train_dataloaders=train_loader, val_dataloaders=test_loader)
-            torch.save(self.lit_model.model.state_dict(), os.path.join(tb_logger.log_dir,'trained_state_dict.pt'))
-            preds = pd.DataFrame(
-                {'ixs': test_ixs, 'subj_IDs': self.Y.index.values[test_ixs], 'true': self.lit_model.y_true.cpu(),
-                 'preds': self.lit_model.y_preds.cpu()}).set_index('ixs')
+        best_epoch = -1
+        test_loader = DataLoader(mditreDataset(test_dataset_dict), batch_size=self.batch_size, shuffle=False)
+        trainer.fit(self.lit_model, train_dataloaders=train_loader, val_dataloaders=test_loader)
+        torch.save(self.lit_model.model.state_dict(), os.path.join(tb_logger.log_dir,'trained_state_dict.pt'))
+        preds = pd.DataFrame(
+            {'ixs': test_ixs, 'subj_IDs': self.Y.index.values[test_ixs], 'true': self.lit_model.y_true.cpu(),
+             'preds': self.lit_model.y_preds.cpu()}).set_index('ixs')
+        try:
+            scores_at_epoch = {k: v[-1].detach().cpu().numpy() for k, v in self.lit_model.scores_dict.items() if
+                               len(v) > 0}
+        except:
             try:
-                scores_at_epoch = {k: v[-1].detach().cpu().numpy() for k, v in self.lit_model.scores_dict.items() if
-                                   len(v) > 0}
+                scores_at_epoch = {k: v[-1].detach() for k, v in self.lit_model.scores_dict.items() if len(v) > 0}
             except:
-                try:
-                    scores_at_epoch = {k: v[-1].detach() for k, v in self.lit_model.scores_dict.items() if len(v) > 0}
-                except:
-                    scores_at_epoch = {k: v[-1] for k, v in self.lit_model.scores_dict.items() if len(v) > 0}
-            try:
-                pd.Series(scores_at_epoch).to_csv(self.output_path + '/scores_at_eval.csv')
-            except:
-                pass
-            preds.to_csv(self.output_path + '/pred_results_f1_{0}'.format(
-                np.round(scores_at_epoch['val f1'], 3)).replace('.', '-') + '.csv')
+                scores_at_epoch = {k: v[-1] for k, v in self.lit_model.scores_dict.items() if len(v) > 0}
+        try:
+            pd.Series(scores_at_epoch).to_csv(self.output_path + '/scores_at_eval.csv')
+        except:
+            pass
+        preds.to_csv(self.output_path + '/pred_results_f1_{0}'.format(
+            np.round(scores_at_epoch['val f1'], 3)).replace('.', '-') + '.csv')
 
-        if self.args.method != 'full_fc':
-            if 'basic' in self.args.method:
-                rules_dict = plot_joint_results(self.train_dataset_dict, self.y, train_ixs, self.lit_model.logging_dict,
-                                   self.output_path, self.args,
-                                   self.lit_model, w_maybe_rules=True)
-                rules_dict = plot_joint_results(self.train_dataset_dict, self.y, train_ixs, self.lit_model.logging_dict,
-                                   self.output_path, self.args,
-                                   self.lit_model, w_maybe_rules=False)
-            else:
-                rules_dict = plot_joint_results_nn(self.train_dataset_dict, self.y, train_ixs, self.lit_model.logging_dict,
-                                      self.output_path, self.args,
-                                      self.lit_model)
+        rules_dict = plot_joint_results(self.train_dataset_dict, self.y, train_ixs, self.lit_model.logging_dict,
+                           self.output_path, self.args,
+                           self.lit_model, w_maybe_rules=False)
 
 
         if len(rules_dict)==0:
@@ -1147,8 +897,7 @@ class CVTrainer():
         with open(tb_logger.log_dir + '/running_loss_dict.pkl', 'wb') as f:
             pkl.dump(self.lit_model.running_loss_dict, f)
 
-        if self.args.method!='full_fc':
-            plot_heatmaps(self.lit_model, train_dataset_dict, tb_logger.log_dir, test_dataset_dict=test_dataset_dict)
+        plot_heatmaps(self.lit_model, train_dataset_dict, tb_logger.log_dir, test_dataset_dict=test_dataset_dict)
         # if self.args.remote == 0 and (self.args.seed == 0 or self.args.plot_all_seeds == 1 or self.args.seed==1):
         if self.args.seed<10 and (self.args.plot_all_seeds==1 or self.args.seed ==0 or self.args.seed ==1):
             save_and_plot_post_training(self.lit_model, train_ixs, test_ixs, tb_logger.log_dir,
@@ -1316,9 +1065,6 @@ def run_training_with_folds(args, OUTPUT_PATH=''):
             train_ixs.pop(fi)
             test_ixs.pop(fi)
 
-    # ray.shutdown()
-    # ray.init(ignore_reinit_error=True, runtime_env={"working_dir": os.getcwd(),
-    #                       "py_modules": ["../utilities/"]})
 
     if global_args.use_ray or args.parallel<2:
         preds = []
@@ -1331,12 +1077,6 @@ def run_training_with_folds(args, OUTPUT_PATH=''):
                 cv_trainer = CVTrainer(args, OUTPUT_PATH, Y)
                 ckpt_preds = cv_trainer.train_loop(dataset_dict, train_idx, test_idx, fold)
             preds.append(ckpt_preds)
-            # args = cv_trainer.args
-            # args.n_r = cv_trainer.args.n_r
-            # args.metabs_n_d = cv_trainer.args.metabs_n_d
-            # args.otus_n_d = cv_trainer.args.otus_n_d
-            # if args.use_ray:
-        # preds = ray.get(preds)
         if global_args.use_ray:
             preds = ids_to_vals(preds)
     else:
@@ -1379,26 +1119,14 @@ if __name__ == '__main__':
     if args.cv_type == 'eval':
         check_inputs_for_eval(args.out_path + '/' + args.run_name + '/', args.__dict__)
 
-    if args.method == 'fc' or args.method == 'full_fc':
-        from models_fc import ComboMDITRE
-    elif 'basic' in args.method:
-        from models import ComboMDITRE
-    else:
-        ValueError(
-            'Warning: accepted method not provided. Choices are: "basic", "fc", "nam", or "full_fc". Default "basic" will be used.')
-        # from models import ComboMDITRE
-
-    # ray.init()
+    from models import ComboMDITRE
     seed_everything_custom(args.seed)
     if not os.path.isdir(args.out_path):
         os.mkdir(args.out_path)
-    # if './datasets/' not in args.data:
-    #     args.data = './datasets/cdi/' + args.data
-    # with open(os.path.join(args.out_path, 'total_time.txt','w'))
+
     st = time.time()
     run_training_with_folds(args, OUTPUT_PATH=args.out_path + '/' + args.run_name + '/')
     et = time.time() - st
     print(f"TRAINING {args.epochs} TOOK {np.round(et / 60, 3)} MINUTES")
-    # with open(os.path.join(args.out_path, 'total_time.txt'), 'w') as f:
-    #     f.write(f"TRAINING {args.epochs} TOOK {np.round(et / 60, 3)} MINUTES")
+
 

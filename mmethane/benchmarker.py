@@ -17,7 +17,7 @@ from utilities.util import cv_loo_splits, cv_kfold_splits, split_and_preprocess_
 
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from viz import plot_input_data
+from helper_plots import plot_input_data
 
 class benchmarker():
     def __init__(self, dataset_dict, y, args, perturbed_mets = None, seed=0, path='.'):
@@ -120,15 +120,15 @@ class benchmarker():
                 pd.DataFrame(rf_random.cv_results_).to_csv(self.path + '/cv_results_fold_{0}.csv'.format(i))
 
 
-        pd.concat(best_params).to_csv(self.path +'/best_params.csv'.format(self.args.data_name))
-        pd.DataFrame(scores).to_csv(self.path +'/scores.csv'.format(self.args.data_name))
+        pd.concat(best_params).to_csv(self.path +'/best_params.csv'.format(self.args.run_name))
+        pd.DataFrame(scores).to_csv(self.path +'/scores.csv'.format(self.args.run_name))
         coef_df_full = pd.concat(coef_dfs, axis=1)
         if self.perturbed_mets is not None:
             pert_df = coef_df_full.index.isin(self.perturbed_mets)
             coef_df_full = pd.concat({'Perturbed': coef_df_full.loc[self.perturbed_mets],
                                       'Un-perturbed': coef_df_full.loc[~pert_df]}, names = ['Metabolite perturbed'])
-        coef_df_full.to_csv(self.path+'/coefs.csv'.format(self.args.data_name))
-        pd.concat(pred_dfs).to_csv(self.path +'/preds.csv'.format(self.args.data_name))
+        coef_df_full.to_csv(self.path+'/coefs.csv'.format(self.args.run_name))
+        pd.concat(pred_dfs).to_csv(self.path +'/preds.csv'.format(self.args.run_name))
 
 
     def train_l1_model(self):
@@ -240,7 +240,7 @@ class benchmarker():
         pd.concat(pred_dfs).to_csv(self.path +'/preds.csv')
         print(l1_lambda)
 
-def process_benchmark_coefs(path, syn_data_seed = None, seed_vec = None):
+def process_benchmark_coefs(path, seed_vec = None):
     seed_res = {}
     row_names=None
     if seed_vec is not None:
@@ -273,14 +273,12 @@ def process_benchmark_coefs(path, syn_data_seed = None, seed_vec = None):
 
     key_func = lambda x: x.abs()
     res_sorted = res.sort_values(by=['median','mean'], ascending=False, key = key_func)
-    if syn_data_seed is not None and syn_data_seed!='':
-        res_sorted.to_csv(path + '/' + f'coef_res_{syn_data_seed}.csv')
-    elif seed_vec is not None:
+    if seed_vec is not None:
         res_sorted.to_csv(path + '/' + f'coef_res_{"".join([str(s) for s in seed_vec])}.csv')
     else:
         res_sorted.to_csv(path + '/' + f'coef_res.csv')
 
-def process_benchmark_results(path, syn_data_seed = None):
+def process_benchmark_results(path):
     seed_res = {}
     for seed_folder in os.listdir(path):
         if '.' in seed_folder:
@@ -322,8 +320,8 @@ def process_benchmark_results(path, syn_data_seed = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Differentiable rule learning for microbiome')
-    parser.add_argument('--data_name', metavar='DIR',
-                        help='data_name',
+    parser.add_argument('--run_name', metavar='DIR',
+                        help='run_name',
                         default='TEST')
     parser.add_argument('--met_data', metavar='DIR',
                         help='path to dataset',
@@ -331,9 +329,6 @@ if __name__ == "__main__":
     parser.add_argument('--otu_data', metavar='DIR',
                         help='path to dataset',
                         default='/Users/jendawk/Dropbox (MIT)/microbes-metabolites/datasets/FRANZOSA/processed/franzosa_ra/seqs.pkl')
-    parser.add_argument('--syn_data', metavar='DIR',
-                        help='path to dataset',
-                        default='/Users/jendawk/Dropbox (MIT)/microbes-metabolites/datasets/SEMISYN/processed/and_metabs_1000')
     parser.add_argument('--seed', type=int, default=[0,1,2,3],
                         help='Set random seed for reproducibility', nargs = '+')
     parser.add_argument('--cv_type', type=str, default='kfold',
@@ -344,98 +339,38 @@ if __name__ == "__main__":
     parser.add_argument('--kfolds', type=int, default=5,
                         help='Number of folds for k-fold cross val')
     parser.add_argument('--case', type=str, default="grid")
-    parser.add_argument('--model', type=str.lower, default='LR', choices=['RF','LR','GradBoost','AdaBoost'])
+    parser.add_argument('--model', type=str.lower, default='LR', choices=['rf','lr','gradboost','adaboost'])
     parser.add_argument('--dtype', type=str, default=['metabs'], nargs='+')
     parser.add_argument('--full', type=int, default=0)
     parser.add_argument('-log','--log_transform_otus',action='store_true')
-    parser.add_argument('--log_dir',type=str, default='logs/')
-    parser.add_argument('--is_synthetic', action='store_true')
+    parser.add_argument('--out_path',type=str, default='logs/')
     parser.add_argument('--otu_tr', type=str,default='none')
     parser.add_argument('--no_filter', action='store_true')
 
-    args = parser.parse_args()
+    args,_ = parser.parse_known_args()
 
     print('')
     print('START')
     for k, v in args.__dict__.items():
         print(k, v)
-    if args.data_name is None:
-        args.data_name=''
-    # args.data_name = '_' + args.met_data.split('/')[-2]
-    if args.is_synthetic:
-        args.data_name += args.syn_data.split('/')[-1]
-    else:
-        if len(args.dtype)>1:
-            args.data_name += '_'.join(args.dtype)
-            args.data_name += '_' + args.met_data.split('/')[-2]
-        else:
-            if 'otus' in args.dtype and args.otu_data is not None:
-                args.data_name += args.dtype[0]
-                args.data_name += '_' + args.otu_data.split('/')[-2]
-            if 'metabs' in args.dtype and args.met_data is not None:
-                args.data_name += args.dtype[0]
-                args.data_name += '_' + args.met_data.split('/')[-2]
-        if args.met_data is not None:
-            tmp = args.met_data.split('/')[-1]
-        else:
-            tmp = args.otu_data.split('/')[-1]
-        if len(tmp.split('_'))>2 or (len(tmp.split('_'))>1 and 'xdl' not in tmp):
-            args.data_name += '_' + tmp.split('_')[0]
-
-    args.data_name = args.data_name + '_' + args.scorer
-    args.data_name += '_' + args.cv_type
-    if args.full==1:
-        args.data_name = args.data_name + '_full'
-    if args.log_transform_otus:
-        args.data_name += '_log-otus'
-    if not os.path.isdir(args.log_dir):
-        os.mkdir(args.log_dir)
-    if not os.path.isdir(args.log_dir + '/' + args.model ):
-        os.mkdir(args.log_dir + '/' + args.model)
-    # if not os.path.isdir(args.log_dir + '/' + args.model + '/'+ args.data_name):
-    #     os.mkdir(args.log_dir + '/' + args.model + '/' +args.data_name)
+    # args.run_name = '_' + args.met_data.split('/')[-2]
+    if not os.path.isdir(args.out_path):
+        os.mkdir(args.out_path)
+    if not os.path.isdir(args.out_path + '/' + args.run_name ):
+        os.mkdir(args.out_path + '/' + args.run_name)
+    # if not os.path.isdir(args.out_path + '/' + args.model + '/'+ args.run_name):
+    #     os.mkdir(args.out_path + '/' + args.model + '/' +args.run_name)
 
     if isinstance(args.seed, int):
         seed_vec = [args.seed]
     else:
         seed_vec = args.seed.copy()
-    data_path = args.data_name
-    print(data_path)
     ds_str = ''
     for seed in seed_vec:
-        args.data_name = data_path + '/seed_{0}'.format(seed)
-        # seed_path = args.log_dir + '/' + args.model + '/{0}/seed_{1}/'.format(data_path, seed)
-        if args.is_synthetic and seed<10:
-            # data_path = data_path + f'_{seed}'
-            data_seed = seed
-            ds_str = str(seed)
-            args.data_name = data_path + f'/seed_{seed}'
-            args.met_data = f'{args.syn_data}_{seed}/mets.pkl'
-            args.otu_data = f'{args.syn_data}_{seed}/seqs.pkl'
-            print(args.met_data)
-            print(args.otu_data)
-        elif args.is_synthetic and seed>=10:
-            data_seed = int(str(seed)[-1])
-            ds_str = str(seed)
-            # data_path = data_path + f'_{data_seed}'
-            args.data_name = data_path + f'/seed_{seed}'
-            args.met_data = f'{args.syn_data}_{data_seed}/mets.pkl'
-            args.otu_data = f'{args.syn_data}_{data_seed}/seqs.pkl'
-            print(args.met_data)
-            print(args.otu_data)
-        else:
-            print(args.met_data)
-            print(args.otu_data)
+        seed_path = args.out_path + '/' + args.run_name + '/seed_{0}'.format(seed)
 
-        if not os.path.isdir(args.log_dir + '/' + args.model + '/' + data_path):
-            os.mkdir(args.log_dir + '/' + args.model + '/' + data_path)
-
-        seed_path = args.log_dir + '/' + args.model + '/{0}/'.format(args.data_name)
-        print(args.data_name)
-        if 'seed_{0}'.format(seed) in os.listdir(args.log_dir + '/' + args.model + '/{0}/'.format(data_path)):
-            # print(args.model + '/{0}/'.format(data_path))
-            print(f'Seed {seed} training finished')
-            continue
+        if not os.path.isdir(seed_path):
+            os.mkdir(seed_path)
 
         dataset_dict = {}
         if 'metabs' in args.dtype or 'both' in args.dtype:
@@ -480,7 +415,7 @@ if __name__ == "__main__":
             y = pd.Series(y, index=dataset_dict['otus']['X'].index.values)
 
         # labels=y
-        print(args.data_name)
+        print(args.run_name)
         model = benchmarker(dataset_dict, y, args, perturbed_mets=None, seed = seed, path=seed_path)
 
         if args.model.lower() == 'lr':
@@ -490,5 +425,5 @@ if __name__ == "__main__":
     # print('END')
     # print('\n\n')
     if isinstance(args.seed, list) and len(args.seed)>1:
-        process_benchmark_results(args.log_dir + '/' + args.model + '/' + data_path, syn_data_seed = ds_str)
-        process_benchmark_coefs(args.log_dir + '/' + args.model + '/' + data_path, syn_data_seed = ds_str)
+        process_benchmark_results(args.out_path + '/' + args.run_name + '/')
+        process_benchmark_coefs(args.out_path + '/' + args.run_name + '/')

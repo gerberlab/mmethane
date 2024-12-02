@@ -470,15 +470,6 @@ def plot_joint_results(data_dict, labels, train_ix, param_dict, out_path, args, 
 
     epoch = -1
     epoch_for_anneal = args.epochs - 1
-    if args.validate==1:
-        ckpt_path = [d for d in os.listdir(out_path) if 'epoch=' in d]
-        if len(ckpt_path)==0:
-            print('Warning: Displaying results from last epoch')
-        else:
-            temp = ckpt_path[0]
-            temp = temp.split('epoch=')[1].split(' ')[0]
-            epoch = int(re.findall(r'\d+', temp)[0])
-            epoch_for_anneal = epoch
 
     if best_params is None:
         try:

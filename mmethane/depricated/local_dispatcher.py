@@ -306,7 +306,6 @@ if __name__=='__main__':
                 ('kmeans','kmeans'),
 
                                                            ],
-            ('metabs_use_pca','otus_use_pca'):[(0,0)],
             'metabs_lr_alpha':[0.001],
             'patience':[100],
             'metabs_lr_thresh':[0.0005],

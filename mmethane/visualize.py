@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import itertools
 
 sys.path.append(os.path.abspath(".."))
 import seaborn as sns
@@ -81,7 +82,7 @@ def plot_activation_heatmap(activation, class_labels_per_subject, cmap, fig=None
     if class_labels:
         ax[0].set_xlabel(class_labels[0])
         ax[1].set_xlabel(class_labels[1])
-    l.set_yticklabels(l.get_yticklabels(), rotation=0, fontsize=f)
+    l.set_yticklabels(l.get_yticklabels(), rotation=0, fontsize=10)
     # ax[0].tick_params(axis='y', labelsize=f, labelrotation=90)
     return fig, ax
 
@@ -122,12 +123,14 @@ def plot_data_heatmap(data_0: pd.DataFrame, data_1: pd.DataFrame, threshold, cma
     max_ylabels = max([len(y) for y in ylabels])
     N = data_0.shape[0]
     S = data_0.shape[1] + data_1.shape[1]
-    f = 10
-    h = N * f / 72
-    w = ((S + 2) / N) * h
-    if width is not None:
-        w = width
     if ax is None:
+        N = data_0.shape[0]
+        if N>1:
+            N+=2
+        S = data_0.shape[1] + data_1.shape[1] + max_ylabels
+        f = 10
+        h = N * f / 72
+        w = S*f
         fig, ax = plt.subplots(1, 3, figsize=(w, h),
                                gridspec_kw={
                                    'hspace': 0.001, 'wspace': 0.025,
@@ -138,6 +141,7 @@ def plot_data_heatmap(data_0: pd.DataFrame, data_1: pd.DataFrame, threshold, cma
         vmax = max([data_0.max().max(), data_1.max().max()])
     ticks_off(ax[0], labelleft=True)
     ticks_off(ax[1])
+    # print(ylabels, f'd1 {data_0.shape}, d2 {data_1.shape}\n')
     l=sns.heatmap(data_0.values, norm=norm, ax=ax[0], cbar=False, square=True, cmap=cmap,
                 center=threshold, yticklabels=ylabels, vmin=vmin, vmax=vmax)
     r=sns.heatmap(data_1.values, norm=norm, ax=ax[1], cbar_ax=ax[2], cbar_kws={'ticks': [threshold]},
@@ -152,7 +156,7 @@ def plot_data_heatmap(data_0: pd.DataFrame, data_1: pd.DataFrame, threshold, cma
     width, height = bbox.width, bbox.height
     fsize_y = (height / data_0.shape[0]) * 72
     # ax[0].tick_params(axis='y', labelsize=fsize_y)
-    l.set_yticklabels(l.get_yticklabels(), rotation=0, fontsize=fsize_y)
+    l.set_yticklabels(l.get_yticklabels(), rotation=0, fontsize=9)
     return fig, ax, max_ylabels
 
 
@@ -322,7 +326,7 @@ def embed_figure(fig, cl=''):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, default = 'logs//run_franzosa_test_0/seed_1/')
+    parser.add_argument("--path", type=str, default = 'logs//run_franzosa_1130_3/seed_5/')
     parser.add_argument("--outcome_positive_value", type=str, default = "Control")
     parser.add_argument("--outcome_negative_value", type=str, default = "CD,UC")
     args = parser.parse_args()
@@ -344,21 +348,36 @@ if __name__ == '__main__':
         for d in det_params[r].keys():
             dtmp = det_params[r][d]
             h = dtmp['data_0'].shape[0]
+            if h>1:
+                h += 2
             heights.append(h)
             heights.append(1)
 
         heights.append(1)
-        f, N, S = 10, 3*(len(det_params[r].keys())*2 + 1), len(Y)
-        h = (N * f) / 72
-        w = ((S + 2) / N) * h
+        num_feats = [len(det_params[r][k]['feature_names']) for k in det_params[r].keys()]
+        num_feats = [n+2 if n>1 else n for n in num_feats]
+        num_activs = len(det_params[r].keys()) + 1
+        num_bw = 3*(num_activs*2 - 2)
+        N = sum(num_feats) + num_activs + num_bw
 
-        h=h*2
-        w = w
+        max_label_len = max(itertools.chain.from_iterable(
+            [[len(nm) for nm in det_params[r][k]['feature_names']] for k in det_params[r].keys()]))
+        S = len(Y) + 0.5 + 1.5
+        f=10
+        h_pts = N*f
+        w_pts = S*f
+        h, w = h_pts/72, w_pts/72
+
+        wspace = 0.5/(len(Y)/2)
+        hspace = 3/np.mean(num_feats)
+        if hspace<0.2:
+            hspace=0.2
+        # print(wspace, hspace)
         fig, ax = plt.subplots(len(det_params[r].keys())*2 + 1, 3,
                                width_ratios = [sum(Y==0), sum(Y==1), 1.5],
+                               gridspec_kw={'wspace':wspace, 'hspace':hspace},
                                height_ratios = heights,
-                               figsize=(w,h),
-                               constrained_layout=True,gridspec_kw={'wspace':0.00001})
+                               figsize=(w,h), layout='none')
 
         ix = 0
         im_left = []
@@ -389,14 +408,16 @@ if __name__ == '__main__':
             else:
                 cmap = cmap_taxa
                 agg = 'sum'
-                tmp = 1.75
-                figtree, axtree = plt.subplots(figsize=(4, len(det_params[r][d]['feature_key']) / tmp))
-                axtree, taxa_ids = plot_phylo_tree(dataset_tr['otus'], det_params[r][d]['feature_key'], ax=axtree,
-                                     out_path=f'{path}/rule_{r}_detector_{d}_tree.nw')
+                # ht_pts = len(det_params[r][d]['feature_key'])*18
+                # ht = ht_pts/72
+                # figtree, axtree = plt.subplots(figsize=(4, ht))
+                figtree, axtree, taxa_ids = plot_phylo_tree(dataset_tr['otus'], det_params[r][d]['feature_key'],
+                                     out_path=f'{path}/rule_{r}_detector_{d}_tree.nw', fontsize=9, width = 4)
                 dtmp['data_0'] = dtmp['data_0'].loc[taxa_ids]
                 dtmp['data_1'] = dtmp['data_1'].loc[taxa_ids]
                 images_left = [embed_figure(figtree, 'tree')]
                 dpi = figtree.get_dpi()
+
 
             fig, _, max_labels = plot_data_heatmap(dtmp['data_0'], dtmp['data_1'], dtmp['threshold'], cmap=cmap,
                                                         fig = fig, ax = ax[ix,:],

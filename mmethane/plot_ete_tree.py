@@ -179,7 +179,7 @@ def plot_tree(tree, align_names=False, name_offset=None, max_dist=None, font_siz
     axe.set_axis_off()
     return coords, axe
 
-def plot_phylo_tree(dataset, features, out_path=None, ax=None):
+def plot_phylo_tree(dataset, features, out_path=None, fontsize=None, width = None):
     # Plots the metabolomic tree given an input newick tree
     # inputs:
     # - newick_path: path of the newick tree
@@ -236,16 +236,11 @@ def plot_phylo_tree(dataset, features, out_path=None, ax=None):
 
     ts = ete3.TreeStyle()
     ts.show_leaf_name = True
-    if ax is not None:
-        coords, ax = plot_tree(t, axe=ax, color_func=color_func, label_func=label_func, dataset=dataset, features=features, font_size=6)
-        return ax, [n.name for n in t.get_leaves() if n.name in features]
-    else:
-        for n in t.traverse():
-            if n.is_leaf():
-                if n.name in features:
-                    n.add_face(ete3.TextFace(label_func(n.name, dataset=dataset), fgcolor='red', fsize=6), column=0, position='branch-top')
-                    n.name = ''
-        ts = ete3.TreeStyle()
-        ts.show_leaf_name = True
-        t.render(out_path.replace('nw','.pdf'), tree_style=ts)
-        plt.close()
+    if fontsize is None:
+        fontsize=8
+    h = (len(all_feats)*fontsize*1.5)/72
+    if width is None:
+        width = 4
+    fig, ax = plt.subplots(figsize=(width, h))
+    coords, ax = plot_tree(t, axe=ax, color_func=color_func, label_func=label_func, dataset=dataset, features=features, font_size=fontsize)
+    return fig, ax, [n.name for n in t.get_leaves() if n.name in features]

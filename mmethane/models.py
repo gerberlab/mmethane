@@ -68,8 +68,6 @@ class featMDITRE(nn.Module):
         self.num_emb_to_learn = num_emb_to_learn
         self.args = args
         self.num_feats = num_feats
-        if 'nam' in self.args.method:
-            self.nam = NAM(num_otu_centers, num_rules, h=args.h_sizes, p=args.dropout)
 
     def forward(self, x, k_otu=1, k_thresh=1, k_alpha=1, hard=False, exp_kappa=False):
         if exp_kappa:
@@ -102,10 +100,7 @@ class featMDITRE(nn.Module):
 
         x = x.squeeze(-1)
 
-        if 'nam' in self.args.method:
-            x = self.nam(x)
-        if 'v2' not in self.args.method:
-            x = torch.sigmoid((x - self.thresh) * k_thresh)
+        x = torch.sigmoid((x - self.thresh) * k_thresh)
         self.x_out = x
         if self.args.use_k_1==1:
             self.z_d = torch.sigmoid(self.alpha)
@@ -183,10 +178,7 @@ class ComboMDITRE(nn.Module):
         #     self.z_r = torch.simoid(self.beta*k_dict['k_beta'])
             # self.z_r = binary_concrete(self.beta, k=k_dict['k_beta'], hard=hard_bc, use_noise=noise_factor == 1,
             #                            noise_factor=noise_factor)
-        if 'nam' in self.args.method:
-            x_out = F.linear(x_out,self.z_r.unsqueeze(0), self.bias)
-        else:
-            x_out = F.linear(x_out, self.weight * self.z_r.unsqueeze(0), self.bias)
+        x_out = F.linear(x_out, self.weight * self.z_r.unsqueeze(0), self.bias)
 
         # if self.args.add_logreg:
         #     x_stand = torch.cat(x_stand, -1)
