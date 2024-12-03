@@ -95,8 +95,9 @@ def parse(parser):
     parser.add_argument('--dtype', type=str,default=['metabs','otus'],choices=['metabs', 'otus'],
                         help='Set to one or the other if you want to run the model with just metabolite data inputs or '
                              'just taxonomic data inputs', nargs='+')
-    parser.add_argument('--overwrite', type=bool, default=False, help="if a run with 'run_name' has already been completed,"
-                                                                      " set to True to overwrite previous result")
+    parser.add_argument('--overwrite', type=int, default=0, help="if a run with 'run_name' has already been completed,"
+                                                                      " set to True to overwrite previous result"
+                        , choices=[0,1])
 
     # 2. Arguments that control training and inference. Defaults are set to the defaults used to produce the results
     #   in the corresponding manuscript
@@ -109,28 +110,31 @@ def parse(parser):
                         help='Choose cross val type')
     parser.add_argument('--kfolds', type=int, default=5,
                         help='Number of folds for k-fold cross val')
-    parser.add_argument('--early_stopping', default=1, type=int)
-    parser.add_argument('--num_anneals', type=float, default=1)
-    parser.add_argument('--monitor', type=str, default='train_loss')
-    parser.add_argument('--schedule_lr', type=int, default=0,
-                        help='Schedule learning rate')
-    parser.add_argument('--parallel', type=int, default=6,help='run in parallel')
-    parser.add_argument('--annealing_limit', type=float, default=[0.05, 0.95], nargs='+')
-    parser.add_argument('--weight_decay', type=float, default=0)
+    parser.add_argument('--early_stopping', default=1, type=int,
+                        help='whether or not to stop training if metric specified in "monitor" does not change '
+                             'more than 1e-2 for number of epochs specfied in "patience"', choices=[0,1])
+    parser.add_argument('--monitor', type=str, default='train_loss', help="what to monitor for early stopping")
+    parser.add_argument('--patience', type=float, default=100, help="number of epochs to wait before early stopping")
+    parser.add_argument('--schedule_lr', type=int, default=0,help='Schedule learning rate', choices=[0,1])
+    parser.add_argument('--num_anneals', type=float, default=1, help="for learning rate scheduling, how many times to cycle annealing")
+    parser.add_argument('--annealing_limit', type=float, default=[0.05, 0.95], nargs='+',
+                        help='when to start and stop learning rate scheduling, as fraction of total epochs')
     parser.add_argument('--anneal_type', type=str, default='linear', choices=['linear', 'cosine', 'exp'])
+    parser.add_argument('--parallel', type=int, default=6, help='how many folds to run in parallel')
+    parser.add_argument('--weight_decay', type=float, default=0)
     parser.add_argument('--optimizer', type=str, default='NAdam', choices=['Adam','RMSprop','NAdam','RAdam','AdamW'])
     parser.add_argument('--eta_min', type=float, default=0.00001)
     parser.add_argument('--eta_min_frac', type=float, default=1e-2)
-    parser.add_argument('--patience', type=float, default=100)
-    parser.add_argument('--kmeans_noise', type=int, default=1)
+    parser.add_argument('--kmeans_noise', type=int, default=1, choices=[0,1],
+                        help="whether to add noise to kmeans initialization of detectors")
     parser.add_argument('--num_cpus', type=float, default=0.5, help='for Ray')
     parser.add_argument('--num_gpus', type=float, default=0, help='for Ray')
     parser.add_argument('--num_inner_folds', type=int, default=5)
     parser.add_argument('--batch_size', type=int)
 
-    parser.add_argument('--plot_all_seeds', type=int, default=1)
-    parser.add_argument('--filter_data', type=int, default=1)
-    parser.add_argument('--plot_traces', type=int, default=1)
+    parser.add_argument('--plot_all_seeds', type=int, default=1, choices=[0,1],
+                        help="whether to plot traces for all seeds; if false, plots only if seed==0")
+    parser.add_argument('--plot_traces', type=int, default=1, choices=[0,1])
 
 
     # 3. Arguments for model hyperparameters.
@@ -205,31 +209,35 @@ def parse(parser):
 
 
     # 4. Additional misc args used during model developement (Changing defaults is not recommended)
-    parser.add_argument('--add_logreg', type=int, default=0)
-    parser.add_argument('--standardize_from_training_data', type=int, default=1)
+    parser.add_argument('--add_logreg', type=int, default=0, choices=[0,1])
+    parser.add_argument('--standardize_from_training_data', type=int, default=1, choices=[0,1])
     parser.add_argument('--metabs_multiplier', type=float, default=10)
     parser.add_argument('--metabs_kappa_mult', type=float, default=1e3)
-    parser.add_argument('--metabs_adj_detector_loss', type=int, default=0)
-    parser.add_argument('--metabs_adj_n_d', type=int, default=0)
-    parser.add_argument('--metabs_adj_kappa_loss', type=int, default=0)
+    parser.add_argument('--metabs_adj_detector_loss', type=int, default=0, choices=[0,1])
+    parser.add_argument('--metabs_adj_n_d', type=int, default=0, choices=[0,1])
+    parser.add_argument('--metabs_adj_kappa_loss', type=int, default=0, choices=[0,1])
     parser.add_argument('--otus_multiplier', type=float, default=1)
-    parser.add_argument('--otus_adj_n_d', type=int, default=0)
+    parser.add_argument('--otus_adj_n_d', type=int, default=0, choices=[0,1])
     parser.add_argument('--otus_kappa_mult', type=float, default=1e3)
-    parser.add_argument('--otus_adj_kappa_loss', type=int, default=0)
-    parser.add_argument('--otus_adj_detector_loss', type=int, default=0)
-    parser.add_argument('--only_mets_w_emb', type=int, default=1, help='whether or not keep only mets with embeddings')
-    parser.add_argument('--only_otus_w_emb', type=int, default=1, help='whether or not keep only otus with embeddings')
-    parser.add_argument('--learn_emb', type=int, default=0, help='whether or not to learn embeddings')
-    parser.add_argument('--use_k_1', type=int, default=1)
-    parser.add_argument('--use_noise', type=int, default=0)
+    parser.add_argument('--otus_adj_kappa_loss', type=int, default=0, choices=[0,1])
+    parser.add_argument('--otus_adj_detector_loss', type=int, default=0, choices=[0,1])
+    parser.add_argument('--only_mets_w_emb', type=int, default=1, help='whether or not keep only mets with embeddings',
+                        choices=[0,1])
+    parser.add_argument('--only_otus_w_emb', type=int, default=1, help='whether or not keep only otus with embeddings',
+                        choices=[0,1])
+    parser.add_argument('--learn_emb', type=int, default=0, help='whether or not to learn embeddings',
+                        choices=[0,1])
+    parser.add_argument('--use_k_1', type=int, default=1, choices=[0,1])
+    parser.add_argument('--use_noise', type=int, default=0, choices=[0,1])
     parser.add_argument('--noise_anneal', type=float, default=[1, 1], nargs='+')
     parser.add_argument('--kappa_eta_prior', type=int, default=1)
     parser.add_argument('--kappa_prior', type=str, default='log-normal', choices=['log-normal', 'trunc-normal'])
     parser.add_argument('--n_mult', type=int, default=1)
-    parser.add_argument('--hard_otu', type=int, default=0)
-    parser.add_argument('--hard_bc', type=int, default=0)
-    parser.add_argument('--adj_pd', type=int, default=0)
-    parser.add_argument('--adj_rule_loss', type=int, default=0)
+    parser.add_argument('--hard_otu', type=int, default=0, choices=[0,1])
+    parser.add_argument('--hard_bc', type=int, default=0, choices=[0,1])
+    parser.add_argument('--adj_pd', type=int, default=0, choices=[0,1])
+    parser.add_argument('--adj_rule_loss', type=int, default=0, choices=[0,1])
+    parser.add_argument('--filter_data', type=int, default=1, choices=[0, 1])
 
     # parser.add_argument('--full_fc', type=int, default=1)
     args, _ = parser.parse_known_args()

@@ -1,0 +1,4 @@
+python3 ./mmethane/lightning_trainer.py  --out_path logs/ --run_name run_franzosa --dtype metabs otus --parallel 6 --data_met datasets/FRANZOSA/processed/franzosa_1130_1/mets.pkl --data_otu datasets/FRANZOSA/processed/franzosa_1130_1/seqs.pkl --seed 0
+
+python3 ./mmethane/visualize.py --path logs//run_franzosa/seed_0// --outcome_positive_value Control --outcome_negative_value CD,UC
+

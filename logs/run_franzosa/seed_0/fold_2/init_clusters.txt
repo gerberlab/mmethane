@@ -1,0 +1,512 @@
+Num Rules x Num Detectors: [10, 10]
+
+rule 0
+detector 0
+kappa: 0.22464294731616974
+# in cluster: 29
+
+
+detector 1
+kappa: 0.22995272278785706
+# in cluster: 18
+
+
+detector 2
+kappa: 0.27410048246383667
+# in cluster: 5
+
+
+detector 3
+kappa: 0.21879605948925018
+# in cluster: 6
+
+
+detector 4
+kappa: 0.25493553280830383
+# in cluster: 11
+
+
+detector 5
+kappa: 0.4360060691833496
+# in cluster: 15
+
+
+detector 6
+kappa: 0.2840128540992737
+# in cluster: 18
+
+
+detector 7
+kappa: 0.1768365353345871
+# in cluster: 7
+
+
+detector 8
+kappa: 0.11484494805335999
+# in cluster: 8
+
+
+detector 9
+kappa: 0.12818029522895813
+# in cluster: 6
+
+
+rule 1
+detector 0
+kappa: 0.24436737596988678
+# in cluster: 18
+
+
+detector 1
+kappa: 0.2253803312778473
+# in cluster: 28
+
+
+detector 2
+kappa: 0.22995857894420624
+# in cluster: 18
+
+
+detector 3
+kappa: 0.12655854225158691
+# in cluster: 6
+
+
+detector 4
+kappa: 0.21926499903202057
+# in cluster: 6
+
+
+detector 5
+kappa: 0.3066450357437134
+# in cluster: 11
+
+
+detector 6
+kappa: 0.39246004819869995
+# in cluster: 4
+
+
+detector 7
+kappa: 0.16164922714233398
+# in cluster: 9
+
+
+detector 8
+kappa: 0.21740277111530304
+# in cluster: 3
+
+
+detector 9
+kappa: 0.3193923532962799
+# in cluster: 21
+
+
+rule 2
+detector 0
+kappa: 0.34932592511177063
+# in cluster: 3
+
+
+detector 1
+kappa: 0.23007816076278687
+# in cluster: 18
+
+
+detector 2
+kappa: 0.24489891529083252
+# in cluster: 18
+
+
+detector 3
+kappa: 0.2157844603061676
+# in cluster: 19
+
+
+detector 4
+kappa: 0.2552787959575653
+# in cluster: 11
+
+
+detector 5
+kappa: 0.19494333863258362
+# in cluster: 19
+
+
+detector 6
+kappa: 0.34934988617897034
+# in cluster: 12
+
+
+detector 7
+kappa: 0.25693079829216003
+# in cluster: 16
+
+
+detector 8
+kappa: 0.2199748009443283
+# in cluster: 6
+
+
+detector 9
+kappa: 0.37951675057411194
+# in cluster: 6
+
+
+rule 3
+detector 0
+kappa: 0.23109573125839233
+# in cluster: 33
+
+
+detector 1
+kappa: 0.14326725900173187
+# in cluster: 13
+
+
+detector 2
+kappa: 0.16203302145004272
+# in cluster: 10
+
+
+detector 3
+kappa: 0.22901315987110138
+# in cluster: 18
+
+
+detector 4
+kappa: 0.3152032196521759
+# in cluster: 21
+
+
+detector 5
+kappa: 0.19616593420505524
+# in cluster: 4
+
+
+detector 6
+kappa: 0.3124721348285675
+# in cluster: 12
+
+
+detector 7
+kappa: 0.3276102840900421
+# in cluster: 10
+
+
+detector 8
+kappa: 0.30777475237846375
+# in cluster: 5
+
+
+detector 9
+kappa: 0.12729249894618988
+# in cluster: 6
+
+
+rule 4
+detector 0
+kappa: 0.307984322309494
+# in cluster: 5
+
+
+detector 1
+kappa: 0.22528859972953796
+# in cluster: 28
+
+
+detector 2
+kappa: 0.14309239387512207
+# in cluster: 13
+
+
+detector 3
+kappa: 0.3193291127681732
+# in cluster: 20
+
+
+detector 4
+kappa: 0.12645171582698822
+# in cluster: 6
+
+
+detector 5
+kappa: 0.16243404150009155
+# in cluster: 10
+
+
+detector 6
+kappa: 0.36219048500061035
+# in cluster: 15
+
+
+detector 7
+kappa: 0.2323283553123474
+# in cluster: 7
+
+
+detector 8
+kappa: 0.33540210127830505
+# in cluster: 14
+
+
+detector 9
+kappa: 0.19685028493404388
+# in cluster: 4
+
+
+rule 5
+detector 0
+kappa: 0.23053096234798431
+# in cluster: 18
+
+
+detector 1
+kappa: 0.34534841775894165
+# in cluster: 12
+
+
+detector 2
+kappa: 0.2252720296382904
+# in cluster: 29
+
+
+detector 3
+kappa: 0.25524523854255676
+# in cluster: 11
+
+
+detector 4
+kappa: 0.1155620664358139
+# in cluster: 8
+
+
+detector 5
+kappa: 0.2569350302219391
+# in cluster: 16
+
+
+detector 6
+kappa: 0.2747875452041626
+# in cluster: 5
+
+
+detector 7
+kappa: 0.3980913758277893
+# in cluster: 16
+
+
+detector 8
+kappa: 0.21954888105392456
+# in cluster: 6
+
+
+detector 9
+kappa: 0.7940984964370728
+# in cluster: 1
+
+
+rule 6
+detector 0
+kappa: 0.41512447595596313
+# in cluster: 13
+
+
+detector 1
+kappa: 0.19516964256763458
+# in cluster: 4
+
+
+detector 2
+kappa: 0.1785246580839157
+# in cluster: 12
+
+
+detector 3
+kappa: 0.22855891287326813
+# in cluster: 18
+
+
+detector 4
+kappa: 0.2533254325389862
+# in cluster: 8
+
+
+detector 5
+kappa: 0.25532418489456177
+# in cluster: 11
+
+
+detector 6
+kappa: 0.31933748722076416
+# in cluster: 22
+
+
+detector 7
+kappa: 0.24297663569450378
+# in cluster: 12
+
+
+detector 8
+kappa: 0.14262419939041138
+# in cluster: 13
+
+
+detector 9
+kappa: 0.21582435071468353
+# in cluster: 19
+
+
+rule 7
+detector 0
+kappa: 0.2552914321422577
+# in cluster: 11
+
+
+detector 1
+kappa: 0.2603507339954376
+# in cluster: 15
+
+
+detector 2
+kappa: 0.22974899411201477
+# in cluster: 18
+
+
+detector 3
+kappa: 0.22936603426933289
+# in cluster: 18
+
+
+detector 4
+kappa: 0.3342921733856201
+# in cluster: 9
+
+
+detector 5
+kappa: 0.1290225237607956
+# in cluster: 6
+
+
+detector 6
+kappa: 0.17707453668117523
+# in cluster: 6
+
+
+detector 7
+kappa: 0.22139860689640045
+# in cluster: 26
+
+
+detector 8
+kappa: 0.3869258761405945
+# in cluster: 12
+
+
+detector 9
+kappa: 0.2537597119808197
+# in cluster: 8
+
+
+rule 8
+detector 0
+kappa: 0.17839957773685455
+# in cluster: 12
+
+
+detector 1
+kappa: 0.23061326146125793
+# in cluster: 18
+
+
+detector 2
+kappa: 0.31949350237846375
+# in cluster: 21
+
+
+detector 3
+kappa: 0.22903454303741455
+# in cluster: 18
+
+
+detector 4
+kappa: 0.23579129576683044
+# in cluster: 11
+
+
+detector 5
+kappa: 0.16304261982440948
+# in cluster: 9
+
+
+detector 6
+kappa: 0.12771093845367432
+# in cluster: 6
+
+
+detector 7
+kappa: 0.217885822057724
+# in cluster: 2
+
+
+detector 8
+kappa: 0.21591372787952423
+# in cluster: 17
+
+
+detector 9
+kappa: 0.38330313563346863
+# in cluster: 16
+
+
+rule 9
+detector 0
+kappa: 0.25517258048057556
+# in cluster: 11
+
+
+detector 1
+kappa: 0.22855733335018158
+# in cluster: 34
+
+
+detector 2
+kappa: 0.14195580780506134
+# in cluster: 13
+
+
+detector 3
+kappa: 0.23765349388122559
+# in cluster: 18
+
+
+detector 4
+kappa: 0.2603032886981964
+# in cluster: 15
+
+
+detector 5
+kappa: 0.23926281929016113
+# in cluster: 7
+
+
+detector 6
+kappa: 0.41077643632888794
+# in cluster: 9
+
+
+detector 7
+kappa: 0.17753317952156067
+# in cluster: 7
+
+
+detector 8
+kappa: 0.341375470161438
+# in cluster: 9
+
+
+detector 9
+kappa: 0.19683635234832764
+# in cluster: 4
+
+

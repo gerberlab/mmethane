@@ -1,31 +1,33 @@
-## Package dependencies
-- python 3.6
-- ete3 (v3.1.2)
-- ete_toolchain 
-- matplotlib (v3.3.4)
-- bitarray (v2.3.0)
-- hmmer (v3.3.2)
-- guppy3 (v3.1.0)
-- rdkit
-- statsmodels (v0.12.2)
-- scipy (v1.5.4)
-- scikit-learn (v0.24.2)
-
-
-## Running MMETHANE
-
-To run MMETHANE with your own data, you only need to create a config file with paths to your dataset files and a few other required inputs (see below for further explanation). Then, you simply run the following command:
-
->python3 ./run.py -c <path/to/config/file>
-
-The above command (1) processes your dataset files into the input files MMETHANE requires, (2) runs MMETHANE, and (3) outputs an .html file with a visualization of your results.
 
 ## Tutorial
-After installing MMETHANE, run
->python3 ./run.py -c ../config_files/config_sample.cfg
+To use MMETHANE, you only need to install MMETHANE and create a .config file to specify where your dataset files are and a few other required inputs (see below for help in creating your .config file)
+
+Once you have created your .config file, the easiest way to run MMETHANE is to install from pip and then run with the following commands:
+
+>pip install mmethane \
+>mmethane -c </path/to/config/file>
+
+Alternatively, you can download this repository and run mmethane with the following commands:
+
+> git clone https://github.com/gerberlab/mmethane.git \
+> cd mmethane \
+> python3 ./mmethane/run.py -c </path/to/config/file> 
+
+## Tutorial
+To try out MMETHANE, you can use the sample config file provided in **config_files/sample.cfg**
+
+If you have installed with pip, run:
+
+>mmethane -c config_files/sample.cfg
+
+
+If you have downloaded the github repo, run 
+
+> python3 ./mmethane/run.py -c config_files/sample.cfg
+
 
 ## Creating a config file for your dataset. 
-**config_files/config_sample.cfg** is a sample config file with all options outlined. Config file options are the following:
+**config_files/sample.cfg** is a sample config file with all options outlined. Config file options are the following:
 > **[description]** \
 > **tag**:*name of your dataset*\
 > **in_path**:*(optional) path of input data folder*\

@@ -1,13 +1,16 @@
+import sys
 import argparse
 import os
 from utilities.data import *
 import subprocess
-import sys
 
 
-if __name__=='__main__':
+
+
+if __name__=="__main__":
+    print('Running MMETHANE')
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config_file', type=str, default='../config_files/tester.cfg')
+    parser.add_argument('-c', '--config_file', type=str, default='config_files/sample.cfg')
     args,_ = parser.parse_known_args()
     config = configparser.RawConfigParser(interpolation=configparser.ExtendedInterpolation())
     config.read(args.config_file)
@@ -36,13 +39,13 @@ if __name__=='__main__':
             config["run"]["data_otu"] = f"{save_path}/seqs.pkl"
 
         if config["run"]["model"].lower()=="mmethane":
-            run_str = "python3 ./lightning_trainer.py "
+            run_str = "python3 ./mmethane/lightning_trainer.py "
 
         elif config["run"]["model"].lower()=="ffn":
-            run_str = "python3 ./lightning_trainer_full_nn.py "
+            run_str = "python3 ./mmethane/lightning_trainer_full_nn.py "
 
         else:
-            run_str = f"python3 ./benchmarker.py --model {config['run']['model']}"
+            run_str = f"python3 ./mmethane/benchmarker.py --model {config['run']['model']}"
             benchmark_model=True
             for (key, val) in config.items("run"):
                 if val != '' and key != "model":
@@ -89,13 +92,13 @@ if __name__=='__main__':
                     on = config['data']['outcome_negative_value']
 
                 if config["run"]["model"].lower() == "mmethane":
-                    plot_str = f"python3 ./visualize.py --path {output_path}/ " \
+                    plot_str = f"python3 ./mmethane/visualize.py --path {output_path}/ " \
                                f"--outcome_positive_value {op} --outcome_negative_value {on}"
                     cmds.append(plot_str)
                     pid = subprocess.Popen(plot_str.split(' '))
 
             if len(seeds) > 1:
-                res_str = f"python3 ./process_multi_seed_results.py --path {config['run']['out_path']}/{config['run']['run_name']}/"
+                res_str = f"python3 ./mmethane/process_multi_seed_results.py --path {config['run']['out_path']}/{config['run']['run_name']}/"
                 pid = subprocess.Popen(res_str.split(' '))
                 cmds.append(res_str)
 

@@ -1,0 +1,8 @@
+metabs
+34 subjects have label=1; 121 subjects have label=0
+After filtering metabs to keep only metabs with levels > 0.0 in 15.0\% of participants, 232 remain
+232 features in metabs dataset after filtering. Test set has 31 samples and train set has 124 samples
+otus
+34 subjects have label=1; 121 subjects have label=0
+After filtering otus to keep only otus with levels > 1e-05 in 10.0\% of participants, 205 remain
+205 features in otus dataset after filtering. Test set has 31 samples and train set has 124 samples

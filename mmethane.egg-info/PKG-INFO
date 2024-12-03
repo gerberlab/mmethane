@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: mmethane
+Version: 0.0
+Summary: Microbes and METabolites to Host Analysis Engine
+Home-page: http://github.com/gerberlab/mmethane
+Author: Jennifer Dawkins
+Author-email: jennifer.j.dawkins@gmail.com
+Requires-Python: >=3.6

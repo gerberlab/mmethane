@@ -34,3 +34,5 @@ datasets/SEMISYN_EASY/
 datasets/SEMISYN/processed_june4/
 **/__pycache__/
 */FINAL_LOGS/
+requirements_old.txt
+config_files/tester.cfg

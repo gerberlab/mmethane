@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='mmethane',
@@ -8,10 +8,10 @@ setup(
     author='Jennifer Dawkins',
     author_email='jennifer.j.dawkins@gmail.com',
     install_requires = [
-        'numpy',
     ],
-    packages=['mmethane'],
+    packages=["mmethane", "mmethane.utilities"],
     include_package_data=True,
     entry_points = {'console_scripts':
-                    ['mmethane=mmethane.run']},
+                    ['mmethane=mmethane.run_package:run']},
+    python_requires=">=3.6"
 )

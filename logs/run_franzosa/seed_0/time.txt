@@ -1,0 +1,6 @@
+1.972 minutes for fold EVAL
+2.996 minutes for fold 0
+3.044 minutes for fold 2
+3.057 minutes for fold 3
+3.079 minutes for fold 4
+3.521 minutes for fold 1

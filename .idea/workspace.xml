@@ -125,7 +125,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="run" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="run_package" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="mmethane" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -138,7 +138,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/mmethane/run.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/mmethane/run_package.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -194,7 +194,7 @@
     <list>
       <item itemvalue="Python.benchmarker" />
       <item itemvalue="Python.process_multi_seed_results" />
-      <item itemvalue="Python.run" />
+      <item itemvalue="Python.run_package" />
       <item itemvalue="Python.visualize" />
       <item itemvalue="Python.semi_synthetic_data" />
       <item itemvalue="Python.lightning_trainer" />
@@ -203,7 +203,7 @@
       <list>
         <item itemvalue="Python.visualize" />
         <item itemvalue="Python.process_multi_seed_results" />
-        <item itemvalue="Python.run" />
+        <item itemvalue="Python.run_package" />
         <item itemvalue="Python.lightning_trainer" />
         <item itemvalue="Python.semi_synthetic_data" />
       </list>
@@ -272,7 +272,7 @@
       <workItem from="1731089684992" duration="38665000" />
       <workItem from="1732559156284" duration="15505000" />
       <workItem from="1732725984590" duration="10415000" />
-      <workItem from="1732744848274" duration="35050000" />
+      <workItem from="1732744848274" duration="47596000" />
     </task>
     <servers />
   </component>

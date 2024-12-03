@@ -1,0 +1,2 @@
+[console_scripts]
+mmethane = mmethane.run_package:run
