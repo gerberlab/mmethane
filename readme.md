@@ -1,5 +1,5 @@
 
-## Tutorial
+## Installation and usage
 To use MMETHANE, you only need to install MMETHANE and create a .config file to specify where your dataset files are and a few other required inputs (see below for help in creating your .config file)
 
 Once you have created your .config file, the easiest way to run MMETHANE is to install from pip and then run with the following commands:
@@ -43,6 +43,18 @@ If you have downloaded the github repo, run
 > **covariate_positive_value**:*(optional) If specifying covariate_variable and covariate values are not ints (0s,1s) specify covariate positivd value*\
 > **covariate_negative_value**:*(optional) Can specify instead of outcome_positive_value or can specify both (i.e. if some samples have third covariate that shouldn't be in processed data)*\
 >
+> **[run]**
+> **model**: *Which model to run (i.e., MMETHANE or benchmarker models.) Choices are "mmethane", "ffn" (feed-forward network), "lr" (lasso logistic regresion), "rf" (random forest), or "adaboost" (adaptive gradient boosting)*\
+> **out_path**: *Path for results of model run*\
+> **seed**: *Seed (or seeds) to run
+> **run_name**: *(optional): Name of folder in "out_path" for results. If not specified, will use "tag"
+> 
+> *Additional arguments to "lightning_trainer.py" (if "model"="mmethane"), "lightning_trainer_full_nn.py" (if "model"="ffn") or 
+> "benchmarker.py" (if "model"="lr","rf", or "adaboost") can be specified here \
+> For example, "dtype" is an input argument to "lightning_trainer.py", which specifies whether to run the model with only metabolite data, only taxonomic data, or both types of data, and can be specified here as:\
+> **dtype**: metabs, otus
+> 
+> 
 > **[sequence_data]**\
 > **data_type**:*Specify if data is from 16s amplicon sequencing or WGS/metagenomics. Options are* [16s, WGS]\
 > **data**:${description:in_path}/*sequence data file, as .csv or .tsv. Format expected is rows of samples and columns of sequences. Sequences can
