@@ -11,7 +11,11 @@ Alternatively, you can download this repository and run mmethane with the follow
 
 > git clone https://github.com/gerberlab/mmethane.git \
 > cd mmethane \
-> python3 ./mmethane/run.py -c </path/to/config/file> 
+> python3 ./mmethane/run.py -c </path/to/config/file>
+
+## Requirements
+To easily install all requirements needed to run MMETHANE, download the "requirements.txt" file in this repository and run 
+> pip install -r requirements.txt
 
 ## Tutorial
 To try out MMETHANE, you can use the sample config file provided in **config_files/sample.cfg**
