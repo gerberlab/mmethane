@@ -11,6 +11,7 @@ def run():
     print('Running MMETHANE')
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config_file', type=str, default='config_files/tester.cfg')
+    parser.add_argument('-o', '--out_path', type=str, default='logs/')
     args,_ = parser.parse_known_args()
     config = configparser.RawConfigParser(interpolation=configparser.ExtendedInterpolation())
     config.read(args.config_file)
@@ -30,6 +31,8 @@ def run():
             config["run"]["run_name"] = config['description']['tag']
 
         save_path = config['description']['out_path'] + config['description']['tag']
+        if 'out_path' not in config['run'] or config['run']['out_path']=='':
+            config['run']['out_path'] = config['description']['out_path']
 
 
         if "data_met" not in config["run"] or config["run"]["data_met"]=="":

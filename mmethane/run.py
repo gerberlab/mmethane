@@ -11,11 +11,13 @@ if __name__=="__main__":
     print('Running MMETHANE')
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config_file', type=str, default='config_files/sample.cfg')
+    parser.add_argument('-o', '--out_path', type=str, default='logs/')
     args,_ = parser.parse_known_args()
     config = configparser.RawConfigParser(interpolation=configparser.ExtendedInterpolation())
     config.read(args.config_file)
 
 
+    config['description']['out_path'] = args.out_path
     if "data" in config.sections():
         if "process_data" in config['description'] and config['description']['process_data'].lower()!='false':
             ProcessData(args.config_file)
@@ -30,6 +32,8 @@ if __name__=="__main__":
             config["run"]["run_name"] = config['description']['tag']
 
         save_path = config['description']['out_path'] + config['description']['tag']
+        if 'out_path' not in config['run'] or config['run']['out_path']=='':
+            config['run']['out_path'] = config['description']['out_path']
 
 
         if "data_met" not in config["run"] or config["run"]["data_met"]=="":
