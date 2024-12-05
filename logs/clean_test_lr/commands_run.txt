@@ -1,2 +1,0 @@
-python3 ./benchmarker.py --model lr --out_path logs/ --run_name clean_test_lr --seed 0 1 2 3 --dtype metabs otus --parallel 6 --use_ray 0 --data_met ../datasets/FRANZOSA/processed/franzosa_1130_1/mets.pkl --data_otu ../datasets/FRANZOSA/processed/franzosa_1130_1/seqs.pkl
-
