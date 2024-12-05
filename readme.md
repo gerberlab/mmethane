@@ -11,7 +11,10 @@ Next, install all requirements needed to run MMETHANE. The easiest way to do thi
 You can now install MMETHANE by either using pip or cloning this repository. To install with pip, run:
 >pip install mmethane 
 
-
+If you prefer to clone this repository, run 
+> git clone https://github.com/gerberlab/mmethane.git
+> cd mmethane
+> 
 ## Tutorial
 To try out MMETHANE, you can use the sample config file provided in **config_files/sample.cfg**
 
