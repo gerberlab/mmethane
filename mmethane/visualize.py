@@ -623,5 +623,5 @@ li {
     with open(args.path + "/style.css", 'w') as f:
         f.write(css_template)
 
-    with open(args.path + "/test.html", 'w') as f:
+    with open(args.path + "/visualization.html", 'w') as f:
         f.write(html_template)

@@ -1,20 +1,22 @@
 
-## Installation & Usage
+## Installation
 It is recommended to install MMETHANE and all requirements in a virtual environment. To create
 and activate a virtual environment with Python 3.11 (recommended), run 
 > conda create -n <env-name> python=3.11 \
 > conda activate <env-name>
 
-Next, install all requirements needed to run MMETHANE. The easiest way to do this is to download the "requirements.txt" file in this repository and run 
-> pip install -r requirements.txt
-
 You can now install MMETHANE by either using pip or cloning this repository. To install with pip, run:
 >pip install mmethane 
 
 If you prefer to clone this repository, run 
-> git clone https://github.com/gerberlab/mmethane.git
+> git clone https://github.com/gerberlab/mmethane.git \
 > cd mmethane
-> 
+
+Next, install all requirements needed to run MMETHANE. The easiest way to do this is to download the "requirements.txt" 
+file in this repository and run:
+> pip install -r requirements.txt \
+> conda install -c etetoolkit ete3
+
 ## Tutorial
 To try out MMETHANE, you can use the sample config file provided in **config_files/sample.cfg**
 
@@ -22,7 +24,7 @@ If you have installed MMETHANE with pip, run:
 
 >mmethane -c config_files/sample.cfg -o <absolute/path/to/output/folder/>
 
-(replacing <absolute/path/to/output/folder/> with the absolute path to an output folder)
+(replacing <absolute/path/to/output/folder/> with the **absolute** path to your output folder)
 
 If you have cloned the github repository, run
 > cd mmethane \
@@ -30,11 +32,14 @@ If you have cloned the github repository, run
 
 Running this command will (1) process an example dataset, (2) run MMETHANE, and (3) output an html file with visualizations
 
-The HTML visualization will be located within the output folder specified above, under the folder for the specific seed ran (specified in the .config file below)
+The HTML visualization will be located at "<output/folder>/mmethane_franzosa/seed_0/visualization.html"
 
-To use MMETHANE with your own data, simply create a .config file (or modify "sample.cfg") as outlined below.
+To run lasso logistic regression with the dataset previously processed, run the same commands as above but replace "sample.cfg" with "sample_LR.cfg"
+For instance:
+> python3 ./mmethane/run.py -c config_files/sample.cfg -o logs/
+
 ## Creating a config file for your dataset. 
-**config_files/sample.cfg** is a sample config file with all options outlined. All config file options are listed below, with required highlighted
+To use MMETHANE with your own data, simply create a .config file (or modify "sample.cfg") as outlined below. Required input arguments are highlighted.
 > <mark>**[description]**<mark/> \
 > <mark>**tag**:*name to be used for folder containing processed data and run results (if "run_name" not specified in [run])*</mark>
 >
