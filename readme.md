@@ -2,8 +2,8 @@
 ## Installation
 It is recommended to install MMETHANE and all requirements in a virtual environment. To create
 and activate a virtual environment with Python 3.11 (recommended), run 
-> conda create -n <env-name> python=3.11 \
-> conda activate <env-name>
+> conda create -n mmenv python=3.11 \
+> conda activate mmenv
 
 You can now install MMETHANE by either using pip or cloning this repository. To install with pip, run:
 >pip install mmethane==0.1
