@@ -15,7 +15,7 @@ If you prefer to clone this repository, run
 Next, install all requirements needed to run MMETHANE. The easiest way to do this is to download the "requirements.txt" 
 file in this repository and run:
 > pip install -r requirements.txt \
-> conda install -c etetoolkit ete3
+> conda install -c etetoolkit ete3 -y
 
 ## Tutorial
 To try out MMETHANE, you can use the sample config file provided in **config_files/sample.cfg**
@@ -27,7 +27,6 @@ If you have installed MMETHANE with pip, run:
 (replacing <absolute/path/to/output/folder/> with the **absolute** path to your output folder)
 
 If you have cloned the github repository, run
-> cd mmethane \
 > python3 ./mmethane/run.py -c config_files/sample.cfg -o logs/
 
 Running this command will (1) process an example dataset, (2) run MMETHANE, and (3) output an html file with visualizations
