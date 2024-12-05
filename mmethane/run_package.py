@@ -8,7 +8,6 @@ import subprocess
 
 
 def run():
-    print('Running MMETHANE')
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config_file', type=str, default='config_files/tester.cfg')
     parser.add_argument('-o', '--out_path', type=str, default='logs/')
@@ -17,6 +16,7 @@ def run():
     config.read(args.config_file)
 
 
+    config['description']['out_path'] = args.out_path
     if "data" in config.sections():
         if "process_data" in config['description'] and config['description']['process_data'].lower()!='false':
             ProcessData(args.config_file)
@@ -27,7 +27,7 @@ def run():
         if "run_model" in config['description'] and config['description']['run_model'].lower()=='false':
             sys.exit()
 
-        if "run_name" not in config["run"]:
+        if "run_name" not in config["run"] or config["run"]["run_name"]=='':
             config["run"]["run_name"] = config['description']['tag']
 
         save_path = config['description']['out_path'] + config['description']['tag']

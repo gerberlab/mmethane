@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='mmethane',
-    version='0.1',
+    version='0.2',
     description='Microbes and METabolites to Host Analysis Engine',
     url='http://github.com/gerberlab/mmethane',
     author='Jennifer Dawkins',

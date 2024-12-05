@@ -6,7 +6,7 @@ and activate a virtual environment with Python 3.11 (recommended), run
 > conda activate mmenv
 
 You can now install MMETHANE by either using pip or cloning this repository. To install with pip, run:
->pip install mmethane==0.1
+>pip install mmethane==0.2
 
 If you prefer to clone this repository, run 
 > git clone https://github.com/gerberlab/mmethane.git \

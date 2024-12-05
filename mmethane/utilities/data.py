@@ -22,8 +22,11 @@ import pickle as pkl
 class ProcessData:
     def __init__(self, config_filename):
         # Open config file
-        self.config = configparser.RawConfigParser(interpolation=configparser.ExtendedInterpolation())
-        self.config.read(config_filename)
+        if isinstance(config_filename, str):
+            self.config = configparser.RawConfigParser(interpolation=configparser.ExtendedInterpolation())
+            self.config.read(config_filename)
+        else:
+            self.config = config_filename
         self.fingerprint_options=['pubchem','infomax','map4','rdkit','morgan','mqn','mhfp','mxfp']
 
         if 'metabolite_data' in self.config and 'fingerprint_type' in self.config['metabolite_data'] and 'week' not in self.config['description']['tag']:
@@ -42,7 +45,7 @@ class ProcessData:
 
         # save copy of config file in new dataset directory so that you can always know what config file you used to
         # generate the data in the folder
-        with open(self.save_path + '/' + config_filename.split('/')[-1], 'w') as f:
+        with open(self.save_path + '/config_ran.cfg', 'w') as f:
             self.config.write(f)
 
         if 'input_path' in self.config['data'] and self.config['data']['input_path'] is not None:
