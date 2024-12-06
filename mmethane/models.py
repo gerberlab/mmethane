@@ -108,7 +108,7 @@ class featMDITRE(nn.Module):
             self.z_d = torch.sigmoid(self.alpha*k_alpha)
         return x
 
-    def init_params(self, init_args,device = 'cuda'):
+    def init_params(self, init_args,device = 'cpu'):
         if self.num_emb_to_learn > 0:
             self.emb_to_learn = nn.Parameter(torch.tensor(init_args['emb_init'], device=device, dtype=torch.float))
         else:
@@ -186,7 +186,7 @@ class ComboMDITRE(nn.Module):
         self.log_odds = x_out.squeeze(-1)
         return x_out.squeeze(-1)
 
-    def init_params(self, init_args, device='cuda'):
+    def init_params(self, init_args, device='cpu'):
         # self.alpha = nn.Parameter(torch.tensor(init_args['alpha_init'], device=device, dtype=torch.float))
         self.weight = nn.Parameter(torch.tensor(init_args['w_init'], device=device, dtype=torch.float))
         # Logistic regression bias
