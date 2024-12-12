@@ -1,3 +1,4 @@
+MMETHANE is a computational tool that makes interpretable predictions of a binary outcome from joint metabolomics and microbial sequencing (16S rRNA amplicon analysis or metagenomics) profiles. MMETHANE outputs English-language explanations of its decisions, as well as visualizations of the underlying data used to make its decisions. See associated publication [link coming soon] for more details. 
 
 ## Installation
 It is recommended to install MMETHANE and all requirements in a virtual environment. To create
