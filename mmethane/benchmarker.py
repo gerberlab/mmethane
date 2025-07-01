@@ -323,10 +323,10 @@ if __name__ == "__main__":
     parser.add_argument('--run_name', metavar='DIR',
                         help='run_name',
                         default='TEST')
-    parser.add_argument('--met_data', metavar='DIR',
+    parser.add_argument('--data_met', metavar='DIR',
                         help='path to dataset',
                         default='/Users/jendawk/Dropbox (MIT)/microbes-metabolites/datasets/FRANZOSA/processed/franzosa_pubchem/mets.pkl')
-    parser.add_argument('--otu_data', metavar='DIR',
+    parser.add_argument('--data_otu', metavar='DIR',
                         help='path to dataset',
                         default='/Users/jendawk/Dropbox (MIT)/microbes-metabolites/datasets/FRANZOSA/processed/franzosa_ra/seqs.pkl')
     parser.add_argument('--seed', type=int, default=[0,1,2,3],
@@ -348,6 +348,8 @@ if __name__ == "__main__":
     parser.add_argument('--no_filter', action='store_true')
 
     args,_ = parser.parse_known_args()
+    args.met_data = args.data_met
+    args.otu_data = args.data_otu
 
     print('')
     print('START')
